@@ -4,9 +4,14 @@ window.APP_CONFIG = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (document.querySelector('script[data-hypersafe-manual-adjust]')) return;
-  const script = document.createElement('script');
-  script.src = './manual-adjust.js?v=2';
-  script.dataset.hypersafeManualAdjust = 'true';
-  document.body.appendChild(script);
+  const loadOnce = (src, marker) => {
+    if (document.querySelector(`script[${marker}]`)) return;
+    const script = document.createElement('script');
+    script.src = src;
+    script.setAttribute(marker, 'true');
+    document.body.appendChild(script);
+  };
+
+  loadOnce('./manual-adjust.js?v=3', 'data-hypersafe-manual-adjust');
+  loadOnce('./reset-control.js?v=1', 'data-hypersafe-reset-control');
 });
