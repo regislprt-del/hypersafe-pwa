@@ -24,9 +24,7 @@
 
   function updateDisplayedValue() {
     const value = document.getElementById('manualAdjustValue');
-    if (value && typeof currentRate === 'function' && typeof fmt === 'function') {
-      value.textContent = fmt(currentRate());
-    }
+    if (value && typeof currentRate === 'function' && typeof fmt === 'function') value.textContent = fmt(currentRate());
   }
 
   async function adjust(delta) {
@@ -55,6 +53,7 @@
         anchors.sort((a,b) => new Date(a.anchor_at) - new Date(b.anchor_at));
       }
 
+      if (data?.id && typeof window.notifyPartnerOfChange === 'function') window.notifyPartnerOfChange('anchors', data.id);
       renderAll();
       updateDisplayedValue();
       toast(`Niveau psychologique ${delta > 0 ? '+1' : '−1'} → ${fmt(next)}`);
