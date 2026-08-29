@@ -1,0 +1,1 @@
+Icônes PWA iOS/Android générées depuis le logo HyperSafe 1024×1024.
