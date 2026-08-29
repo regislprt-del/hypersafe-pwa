@@ -67,10 +67,7 @@
     if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = 'Vérification…'; }
 
     try {
-      const verified = await sb.auth.signInWithPassword({
-        email: session.user.email,
-        password
-      });
+      const verified = await sb.auth.signInWithPassword({ email: session.user.email, password });
       if (verified.error) {
         toast('Mot de passe incorrect. Réinitialisation annulée.');
         return;
@@ -87,13 +84,13 @@
       await loadAll();
       renderAll();
       closeModal();
-      toast('Réinitialisation totale effectuée : niveau remis à 0.');
+      toast('Réinitialisation totale effectuée : niveau remis à 78.');
     } catch (e) {
       toast(e.message || 'Impossible de réinitialiser les données.');
     } finally {
       if (input) input.value = '';
       resetting = false;
-      if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Effacer tout et remettre à 0'; }
+      if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'Effacer tout et repartir à 78'; }
     }
   }
 
@@ -107,7 +104,7 @@
     card.className = 'card danger-card hidden';
     card.innerHTML = `
       <h2>Zone sensible</h2>
-      <p>Réinitialisation totale réservée au propriétaire. Efface définitivement l'historique et remet le niveau psychologique à 0, sans supprimer les comptes ni leur liaison.</p>
+      <p>Réinitialisation totale réservée au propriétaire. Efface définitivement l'historique et remet le niveau psychologique à sa valeur initiale de 78, sans supprimer les comptes ni leur liaison.</p>
       <button id="openTotalReset" class="danger-reset-btn" type="button">Réinitialisation totale</button>
     `;
     app.appendChild(card);
@@ -118,14 +115,14 @@
     backdrop.innerHTML = `
       <div class="reset-modal" role="dialog" aria-modal="true" aria-labelledby="resetDialogTitle">
         <h3 id="resetDialogTitle">Réinitialisation totale</h3>
-        <div class="reset-warning">Action irréversible : tous les événements et toutes les anciennes valeurs de référence seront supprimés.</div>
+        <div class="reset-warning">Action irréversible : tous les événements et toutes les anciennes valeurs de référence seront supprimés. Le niveau repartira à 78.</div>
         <p>Pour confirmer que c'est bien toi, saisis le mot de passe de ton compte HyperSafe. Le mot de passe n'est jamais enregistré dans l'application.</p>
         <label>Mot de passe
           <input id="resetPassword" type="password" autocomplete="current-password" placeholder="Ton mot de passe" />
         </label>
         <div class="reset-modal-actions">
           <button id="cancelTotalReset" class="reset-cancel" type="button">Annuler</button>
-          <button id="confirmTotalReset" class="reset-confirm" type="button">Effacer tout et remettre à 0</button>
+          <button id="confirmTotalReset" class="reset-confirm" type="button">Effacer tout et repartir à 78</button>
         </div>
       </div>
     `;
