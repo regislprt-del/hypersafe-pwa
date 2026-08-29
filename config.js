@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(script);
   };
 
+  loadOnce('./auth-redirect.js?v=1', 'data-hypersafe-auth-redirect');
   loadOnce('./manual-adjust.js?v=3', 'data-hypersafe-manual-adjust');
   loadOnce('./reset-control.js?v=1', 'data-hypersafe-reset-control');
 });
