@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Suivi" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Gestion Hypersexualité</title>
+</head>
+<body>
+  <div id="toast" class="toast hidden"></div>
+  <main class="shell">
+    <section id="authView" class="auth-card">
+      <img src="icons/icon-192.png" class="auth-logo" alt="Logo" />
+      <h1>Gestion Hypersexualité</h1>
+      <p class="muted">Suivi partagé et privé du couple</p>
+      <div class="tabs">
+        <button class="tab active" data-auth-tab="login">Connexion</button>
+        <button class="tab" data-auth-tab="signup">Créer un compte</button>
+      </div>
+      <form id="authForm" class="stack">
+        <label>E-mail<input id="email" type="email" autocomplete="email" required /></label>
+        <label>Mot de passe<input id="password" type="password" minlength="8" autocomplete="current-password" required /></label>
+        <button id="authSubmit" class="primary" type="submit">Se connecter</button>
+      </form>
+      <p class="tiny">Les données ne sont pas stockées dans le navigateur comme source principale : elles sont synchronisées dans votre base Supabase.</p>
+    </section>
+
+    <section id="pairView" class="auth-card hidden">
+      <img src="icons/icon-192.png" class="auth-logo" alt="Logo" />
+      <h2>Relier les deux comptes</h2>
+      <p class="muted">Une personne crée le couple, l'autre saisit le code obtenu.</p>
+      <div class="pair-grid">
+        <div class="panel">
+          <h3>Créer le couple</h3>
+          <button id="createCouple" class="primary">Créer et obtenir le code</button>
+          <div id="createdCode" class="share-code hidden"></div>
+        </div>
+        <div class="panel">
+          <h3>Rejoindre</h3>
+          <input id="joinCode" maxlength="12" placeholder="Code du couple" />
+          <button id="joinCouple" class="secondary">Rejoindre</button>
+        </div>
+      </div>
+      <button id="logoutPair" class="ghost">Se déconnecter</button>
+    </section>
+
+    <section id="appView" class="hidden">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">GESTION HYPERSEXUALITÉ</div>
+          <h1>Suivi psychologique</h1>
+        </div>
+        <div class="header-actions">
+          <span id="syncBadge" class="sync-badge">Synchronisé</span>
+          <button id="logoutBtn" class="icon-btn" aria-label="Déconnexion">↪</button>
+        </div>
+      </header>
+
+      <section class="cards two-col">
+        <article id="rateCard" class="rate-card">
+          <span>Taux actuel</span>
+          <strong id="currentRate">0</strong>
+          <small id="statusText">Très bon</small>
+        </article>
+        <article class="card">
+          <span class="muted">Évolution</span>
+          <strong>+1 / heure</strong>
+          <small>Projection visible sur 70 h</small>
+        </article>
+      </section>
+
+      <section class="card chart-card">
+        <div class="section-head">
+          <div><h2>Courbe d'évolution</h2><p>Historique conservé + projection sans nouvel événement</p></div>
+          <select id="historyRange">
+            <option value="24">24 h</option>
+            <option value="168" selected>7 jours</option>
+            <option value="720">30 jours</option>
+            <option value="2160">90 jours</option>
+            <option value="all">Tout l’historique</option>
+          </select>
+        </div>
+        <div class="chart-wrap"><canvas id="curveCanvas"></canvas></div>
+        <div class="legend">
+          <span><i class="dot verygood"></i>Très bon 0–12</span>
+          <span><i class="dot good"></i>Bon 12–18</span>
+          <span><i class="dot bad"></i>Mauvais 18–31</span>
+          <span><i class="dot verybad"></i>Très mauvais 31–43</span>
+          <span><i class="dot catastrophic"></i>Catastrophique 43–78</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head"><div><h2>Enregistrer un rapport</h2><p>3 validations maximum par type et par jour.</p></div><span id="todayLabel" class="pill"></span></div>
+        <div id="eventGrid" class="event-grid"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-head"><div><h2>Derniers événements</h2><p>Heure, type et taux résultant uniquement.</p></div><button id="refreshBtn" class="ghost small">Actualiser</button></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Date / heure</th><th>Type</th><th>Taux</th></tr></thead><tbody id="recentBody"></tbody></table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head"><div><h2>Historique complet</h2><p>Aucune limite de durée appliquée par l'application.</p></div></div>
+        <div class="history-controls">
+          <input id="historySearch" placeholder="Rechercher un type…" />
+          <button id="loadMore" class="secondary small">Afficher plus</button>
+        </div>
+        <div id="fullHistory" class="history-list"></div>
+      </section>
+
+      <section class="card settings-card">
+        <h2>Réglages</h2>
+        <div class="setting-row">
+          <div><strong>Nouvelle valeur de référence</strong><p>Permet de recaler le taux actuel sans effacer l'historique.</p></div>
+          <div class="anchor-tools"><input id="anchorValue" type="number" min="0" max="78" step="0.1" /><button id="setAnchor" class="secondary small">Définir</button></div>
+        </div>
+        <div class="setting-row">
+          <div><strong>Code du couple</strong><p>À conserver privé. Il sert uniquement à rattacher le second compte.</p></div>
+          <code id="coupleCode">—</code>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
