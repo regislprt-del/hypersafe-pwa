@@ -93,6 +93,16 @@ async function fetchAll(table, coupleId, orderColumn) {
   return all;
 }
 
+async function restorePersistentSession() {
+  if (!sb) return false;
+  const { data, error } = await sb.auth.getSession();
+  if (error || !data?.session) return false;
+  const changedUser = !session || session.user?.id !== data.session.user?.id;
+  session = data.session;
+  if (changedUser || !profile) await enterSession();
+  return true;
+}
+
 async function init() {
   if (!CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_ANON_KEY) {
     toast('Configuration Supabase manquante.');
@@ -100,16 +110,24 @@ async function init() {
     return;
   }
   sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    auth: {
+      storage: window.localStorage,
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
   });
-  const { data } = await sb.auth.getSession();
-  session = data.session;
-  if (session) await enterSession(); else show('#authView');
+  const restored = await restorePersistentSession();
+  if (!restored) show('#authView');
   sb.auth.onAuthStateChange(async (_event, nextSession) => {
     session = nextSession;
     if (!nextSession) {
       cleanupRealtime(); profile = null; couple = null; anchors = []; events = []; show('#authView');
     }
+  });
+  window.addEventListener('pageshow', () => restorePersistentSession().catch(() => {}));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') restorePersistentSession().catch(() => {});
   });
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
