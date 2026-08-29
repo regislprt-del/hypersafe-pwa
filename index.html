@@ -6,8 +6,9 @@
   <meta name="theme-color" content="#0f172a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Suivi" />
-  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <meta name="apple-mobile-web-app-title" content="HyperSafe" />
+  <link rel="icon" href="logo.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="logo.svg" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="styles.css" />
   <title>Gestion Hypersexualité</title>
@@ -16,7 +17,7 @@
   <div id="toast" class="toast hidden"></div>
   <main class="shell">
     <section id="authView" class="auth-card">
-      <img src="icons/icon-192.png" class="auth-logo" alt="Logo" />
+      <img src="logo.svg" class="auth-logo" alt="Logo HyperSafe" />
       <h1>Gestion Hypersexualité</h1>
       <p class="muted">Suivi partagé et privé du couple</p>
       <div class="tabs">
@@ -28,11 +29,11 @@
         <label>Mot de passe<input id="password" type="password" minlength="8" autocomplete="current-password" required /></label>
         <button id="authSubmit" class="primary" type="submit">Se connecter</button>
       </form>
-      <p class="tiny">Les données ne sont pas stockées dans le navigateur comme source principale : elles sont synchronisées dans votre base Supabase.</p>
+      <p class="tiny">Les données sont synchronisées dans votre base privée HyperSafe et non conservées uniquement sur cet appareil.</p>
     </section>
 
     <section id="pairView" class="auth-card hidden">
-      <img src="icons/icon-192.png" class="auth-logo" alt="Logo" />
+      <img src="logo.svg" class="auth-logo" alt="Logo HyperSafe" />
       <h2>Relier les deux comptes</h2>
       <p class="muted">Une personne crée le couple, l'autre saisit le code obtenu.</p>
       <div class="pair-grid">
@@ -103,17 +104,12 @@
 
       <section class="card">
         <div class="section-head"><div><h2>Derniers événements</h2><p>Heure, type et taux résultant uniquement.</p></div><button id="refreshBtn" class="ghost small">Actualiser</button></div>
-        <div class="table-wrap">
-          <table><thead><tr><th>Date / heure</th><th>Type</th><th>Taux</th></tr></thead><tbody id="recentBody"></tbody></table>
-        </div>
+        <div class="table-wrap"><table><thead><tr><th>Date / heure</th><th>Type</th><th>Taux</th></tr></thead><tbody id="recentBody"></tbody></table></div>
       </section>
 
       <section class="card">
         <div class="section-head"><div><h2>Historique complet</h2><p>Aucune limite de durée appliquée par l'application.</p></div></div>
-        <div class="history-controls">
-          <input id="historySearch" placeholder="Rechercher un type…" />
-          <button id="loadMore" class="secondary small">Afficher plus</button>
-        </div>
+        <div class="history-controls"><input id="historySearch" placeholder="Rechercher un type…" /><button id="loadMore" class="secondary small">Afficher plus</button></div>
         <div id="fullHistory" class="history-list"></div>
       </section>
 
@@ -132,6 +128,7 @@
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="app.js"></script>
+  <script src="app-core.js"></script>
+  <script src="app-ui.js"></script>
 </body>
 </html>
