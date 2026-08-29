@@ -17,4 +17,5 @@ document.addEventListener('DOMContentLoaded', () => {
   loadOnce('./push-notifications.js?v=1', 'data-hypersafe-push-notifications');
   loadOnce('./manual-adjust.js?v=4', 'data-hypersafe-manual-adjust');
   loadOnce('./reset-control.js?v=1', 'data-hypersafe-reset-control');
+  loadOnce('./day-reset.js?v=1', 'data-hypersafe-day-reset');
 });
