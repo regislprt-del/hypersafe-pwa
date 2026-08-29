@@ -25,6 +25,7 @@ async function toggleSlot(kind, slot) {
       events.push(data);
       events.sort((a,b) => new Date(a.occurred_at) - new Date(b.occurred_at));
     }
+    if (data?.id && typeof window.notifyPartnerOfChange === 'function') window.notifyPartnerOfChange('events', data.id);
     toast('Événement enregistré');
   }
   renderAll();
@@ -44,6 +45,7 @@ async function setAnchor() {
     anchors.push(data);
     anchors.sort((a,b) => new Date(a.anchor_at) - new Date(b.anchor_at));
   }
+  if (data?.id && typeof window.notifyPartnerOfChange === 'function') window.notifyPartnerOfChange('anchors', data.id);
   renderAll(); toast('Nouvelle référence enregistrée');
 }
 
