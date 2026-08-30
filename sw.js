@@ -1,13 +1,7 @@
-const CACHE='hypersafe-pwa-v8';
+const CACHE='hypersafe-pwa-v9';
 const STATIC=['./styles.css','./manifest.webmanifest','./logo.svg','./icons/icon-180.png','./icons/icon-192.png','./icons/icon-512.png'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(STATIC)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()])));
-self.addEventListener('fetch',e=>{
-  if(e.request.method!=='GET')return;
-  const u=new URL(e.request.url);
-  const fresh=u.origin===self.location.origin&&(e.request.mode==='navigate'||/\.(?:html|js)$/.test(u.pathname)||u.pathname.endsWith('/'));
-  if(fresh){e.respondWith(fetch(e.request,{cache:'no-store'}).catch(()=>caches.match('./index.html')));return;}
-  e.respondWith(fetch(e.request).then(r=>{if(r.ok&&u.origin===self.location.origin){const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy))}return r}).catch(()=>caches.match(e.request)));
-});
-self.addEventListener('push',event=>{let data={};try{data=event.data?event.data.json():{}}catch(_){}const title=data.title||'HyperSafe';const options={body:data.body||'Le niveau a été mis à jour.',icon:'./icons/icon-192.png',badge:'./icons/icon-192.png',tag:'hypersafe-curve-update',renotify:true,data:{url:data.url||'./'}};event.waitUntil(self.registration.showNotification(title,options))});
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);const fresh=u.origin===self.location.origin&&(e.request.mode==='navigate'||/\.(?:html|js)$/.test(u.pathname)||u.pathname.endsWith('/'));if(fresh){e.respondWith(fetch(e.request,{cache:'no-store'}).catch(()=>caches.match('./index.html')));return;}e.respondWith(fetch(e.request).then(r=>{if(r.ok&&u.origin===self.location.origin){const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy))}return r}).catch(()=>caches.match(e.request)))});
+self.addEventListener('push',event=>{let data={};try{data=event.data?event.data.json():{}}catch(_){}const title=data.title||'HyperSafe';const options={body:data.body||'Le niveau a été mis à jour.',icon:'./icons/icon-192.png',badge:'./icons/icon-192.png',tag:data.tag||'hypersafe-notification',renotify:true,data:{url:data.url||'./'}};event.waitUntil(self.registration.showNotification(title,options))});
 self.addEventListener('notificationclick',event=>{event.notification.close();const url=event.notification.data?.url||'./';event.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(list=>{for(const client of list){if('focus'in client){client.navigate(url).catch(()=>{});return client.focus()}}return clients.openWindow?clients.openWindow(url):undefined}))});
