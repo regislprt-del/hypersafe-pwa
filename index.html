@@ -7,26 +7,26 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="HyperSafe" />
-  <link rel="icon" href="icons/icon-192.png?v=8" type="image/png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=8" />
-  <link rel="manifest" href="manifest.webmanifest?v=8" />
-  <link rel="stylesheet" href="styles.css?v=8" />
+  <link rel="icon" href="icons/icon-192.png?v=10" type="image/png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=10" />
+  <link rel="manifest" href="manifest.webmanifest?v=10" />
+  <link rel="stylesheet" href="styles.css?v=10" />
   <title>Gestion Hypersexualité</title>
 </head>
 <body>
   <div id="toast" class="toast hidden"></div>
   <main class="shell">
     <section id="authView" class="auth-card">
-      <img src="icons/icon-192.png?v=8" class="auth-logo" alt="Logo HyperSafe" />
+      <img src="icons/icon-192.png?v=10" class="auth-logo" alt="Logo HyperSafe" />
       <h1>Gestion Hypersexualité</h1><p class="muted">Suivi partagé et privé du couple</p>
       <div class="tabs"><button class="tab active" data-auth-tab="login">Connexion</button><button class="tab" data-auth-tab="signup">Créer un compte</button></div>
       <form id="authForm" class="stack"><label>E-mail<input id="email" type="email" autocomplete="email" required /></label><label>Mot de passe<input id="password" type="password" minlength="8" autocomplete="current-password" required /></label><button id="authSubmit" class="primary" type="submit">Se connecter</button></form>
       <p class="tiny">Les données sont synchronisées dans votre base privée HyperSafe et non conservées uniquement sur cet appareil.</p>
     </section>
-    <section id="pairView" class="auth-card hidden"><img src="icons/icon-192.png?v=8" class="auth-logo" alt="Logo HyperSafe" /><h2>Relier les deux comptes</h2><p class="muted">Une personne crée le couple, l'autre saisit le code obtenu.</p><div class="pair-grid"><div class="panel"><h3>Créer le couple</h3><button id="createCouple" class="primary">Créer et obtenir le code</button><div id="createdCode" class="share-code hidden"></div></div><div class="panel"><h3>Rejoindre</h3><input id="joinCode" maxlength="12" placeholder="Code du couple" /><button id="joinCouple" class="secondary">Rejoindre</button></div></div><button id="logoutPair" class="ghost">Se déconnecter</button></section>
+    <section id="pairView" class="auth-card hidden"><img src="icons/icon-192.png?v=10" class="auth-logo" alt="Logo HyperSafe" /><h2>Relier les deux comptes</h2><p class="muted">Une personne crée le couple, l'autre saisit le code obtenu.</p><div class="pair-grid"><div class="panel"><h3>Créer le couple</h3><button id="createCouple" class="primary">Créer et obtenir le code</button><div id="createdCode" class="share-code hidden"></div></div><div class="panel"><h3>Rejoindre</h3><input id="joinCode" maxlength="12" placeholder="Code du couple" /><button id="joinCouple" class="secondary">Rejoindre</button></div></div><button id="logoutPair" class="ghost">Se déconnecter</button></section>
     <section id="appView" class="hidden">
       <header class="topbar"><div><h1>Gestion hypersexualité</h1></div><div class="header-actions"><span id="syncBadge" class="sync-badge">Synchronisé</span><button id="logoutBtn" class="icon-btn" aria-label="Déconnexion">↪</button></div></header>
-      <section class="rate-summary"><article id="rateCard" class="rate-card"><span>Taux actuel</span><strong id="currentRate">0</strong><small id="statusText"></small></article><article class="trend-card"><span>Tendance (24h)</span><div class="trend-content"><strong id="trendArrow">→</strong><div><b id="trendLabel">Stable</b><small id="trendValue">0 point</small></div></div></article></section>
+      <section class="rate-summary"><article id="rateCard" class="rate-card"><span>Taux actuel</span><strong id="currentRate">0</strong><small id="statusText"></small></article><article class="trend-card"><span>Tendance (24h)</span><div class="trend-content"><strong id="trendArrow">→</strong><div class="trend-text"><b id="trendLabel">Stable</b><small id="trendValue">0 point</small></div></div></article></section>
       <section class="card chart-card"><div class="section-head"><div><h2>Courbe d'évolution</h2><p>Historique conservé + projection sans nouvel événement</p></div><select id="historyRange"><option value="24">24 h</option><option value="168" selected>7 jours</option><option value="720">30 jours</option><option value="2160">90 jours</option><option value="all">Tout l’historique</option></select></div><div class="chart-wrap"><canvas id="curveCanvas"></canvas></div></section>
       <section class="card"><div class="section-head"><div><h2>Derniers événements</h2><p>Heure, type et taux résultant uniquement.</p></div><button id="refreshBtn" class="ghost small">Actualiser</button></div><div class="table-wrap"><table><thead><tr><th>Date / heure</th><th>Type</th><th>Taux</th></tr></thead><tbody id="recentBody"></tbody></table></div></section>
       <section class="card"><div class="section-head"><div><h2>Enregistrer un rapport</h2><p>3 validations maximum par type et par jour.</p></div><span id="todayLabel" class="pill"></span></div><div id="eventGrid" class="event-grid"></div></section>
@@ -35,6 +35,6 @@
     </section>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=8"></script><script src="app-core.js?v=8"></script><script src="app-ui.js?v=8"></script>
-  <script src="auth-redirect.js?v=8"></script><script src="push-notifications.js?v=8"></script><script src="manual-adjust.js?v=8"></script><script src="reset-control.js?v=8"></script><script src="day-reset.js?v=8"></script>
+  <script src="config.js?v=10"></script><script src="app-core.js?v=10"></script><script src="app-ui.js?v=10"></script>
+  <script src="auth-redirect.js?v=10"></script><script src="push-notifications.js?v=10"></script><script src="manual-adjust.js?v=10"></script><script src="reset-control.js?v=10"></script><script src="day-reset.js?v=10"></script>
 </body></html>
