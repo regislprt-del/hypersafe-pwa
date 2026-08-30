@@ -7,148 +7,21 @@ async function toggleSlot(kind, slot) {
     events = events.filter(e => e.id !== existing.id);
     toast('Événement supprimé');
   } else {
-    const { data, error } = await sb.from('events').insert({
-      couple_id: profile.couple_id,
-      event_day: day,
-      kind,
-      slot_no: slot,
-      created_by: session.user.id
-    }).select().single();
-    if (error) {
-      if (error.code === '23505') {
-        await loadAll(); renderAll();
-        return toast('Ce +1 vient déjà d’être validé sur l’autre appareil.');
-      }
-      return toast(error.message);
-    }
-    if (data && !events.some(e => e.id === data.id)) {
-      events.push(data);
-      events.sort((a,b) => new Date(a.occurred_at) - new Date(b.occurred_at));
-    }
+    const { data, error } = await sb.from('events').insert({ couple_id: profile.couple_id, event_day: day, kind, slot_no: slot, created_by: session.user.id }).select().single();
+    if (error) { if (error.code === '23505') { await loadAll(); renderAll(); return toast('Ce +1 vient déjà d’être validé sur l’autre appareil.'); } return toast(error.message); }
+    if (data && !events.some(e => e.id === data.id)) { events.push(data); events.sort((a,b) => new Date(a.occurred_at) - new Date(b.occurred_at)); }
     if (data?.id && typeof window.notifyPartnerOfChange === 'function') window.notifyPartnerOfChange('events', data.id);
     toast('Événement enregistré');
   }
   renderAll();
 }
-
-async function setAnchor() {
-  let value = Number($('#anchorValue').value);
-  if (!Number.isFinite(value)) return;
-  value = clamp(value);
-  const { data, error } = await sb.from('anchors').insert({
-    couple_id: profile.couple_id,
-    score: value,
-    created_by: session.user.id
-  }).select().single();
-  if (error) return toast(error.message);
-  if (data && !anchors.some(a => a.id === data.id)) {
-    anchors.push(data);
-    anchors.sort((a,b) => new Date(a.anchor_at) - new Date(b.anchor_at));
-  }
-  if (data?.id && typeof window.notifyPartnerOfChange === 'function') window.notifyPartnerOfChange('anchors', data.id);
-  renderAll(); toast('Nouvelle référence enregistrée');
-}
-
-function renderAll() {
-  renderRate(); renderSlots(); renderRecent(); renderHistory(); renderChart();
-  $('#coupleCode').textContent = couple?.join_code || '—';
-  $('#anchorValue').value = fmt(currentRate());
-  $('#todayLabel').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit' });
-}
-
-function renderRate() {
-  const r = currentRate(); const s = status(r);
-  $('#currentRate').textContent = fmt(r);
-  $('#statusText').textContent = s.label;
-  $('#rateCard').style.background = `linear-gradient(135deg,${s.c},#0f172a)`;
-}
-
-function renderSlots() {
-  const grid = $('#eventGrid'); grid.innerHTML = ''; const day = localDay();
-  for (const [kind, name] of TYPES) {
-    const row = document.createElement('div');
-    row.className = 'event-row';
-    row.innerHTML = `<div class="event-name">${name}</div>`;
-    for (let i=1;i<=3;i++) {
-      const e = events.find(x => x.event_day === day && x.kind === kind && x.slot_no === i);
-      const b = document.createElement('button');
-      b.className = 'slot' + (e ? ' active' : '');
-      b.innerHTML = e ? `✓ +1<span class="slot-time">${new Date(e.occurred_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span>` : '+1';
-      b.onclick = () => toggleSlot(kind, i);
-      row.appendChild(b);
-    }
-    grid.appendChild(row);
-  }
-}
-
-function renderRecent() {
-  const arr = [...events].sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at)).slice(0,12);
-  $('#recentBody').innerHTML = arr.map(e => `<tr><td>${new Date(e.occurred_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</td><td>${typeInfo(e.kind)?.[1] || e.kind}</td><td>${fmt(resultRateForEvent(e))}</td></tr>`).join('') || '<tr><td colspan="3">Aucun événement</td></tr>';
-}
-
-function renderHistory() {
-  const q = $('#historySearch').value.trim().toLowerCase();
-  let arr = [...events].sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at));
-  if (q) arr = arr.filter(e => (typeInfo(e.kind)?.[1] || '').toLowerCase().includes(q));
-  arr = arr.slice(0, historyLimit);
-  $('#fullHistory').innerHTML = arr.map(e => `<div class="history-item"><span>${new Date(e.occurred_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</span><strong>${typeInfo(e.kind)?.[1] || e.kind}</strong><span class="rate">${fmt(resultRateForEvent(e))}</span></div>`).join('') || '<p class="muted">Aucun résultat.</p>';
-}
-
-function renderChart() {
-  const canvas = $('#curveCanvas');
-  const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = Math.max(300, rect.width*dpr); canvas.height = Math.max(220, rect.height*dpr);
-  const c = canvas.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0);
-  const W=rect.width,H=rect.height,p={l:42,r:16,t:18,b:30};
-  const iw=W-p.l-p.r, ih=H-p.t-p.b;
-  c.clearRect(0,0,W,H);
-  const bands=[[0,12,'#dcfce7'],[12,18,'#ecfccb'],[18,31,'#fef9c3'],[31,43,'#ffedd5'],[43,78,'#fee2e2']];
-  const y=v=>p.t+ih-(clamp(v)/78)*ih;
-  bands.forEach(([a,b,col])=>{c.fillStyle=col;c.fillRect(p.l,y(b),iw,y(a)-y(b));});
-  c.strokeStyle='#cbd5e1';c.lineWidth=1;
-  [0,12,18,31,43,78].forEach(v=>{c.beginPath();c.moveTo(p.l,y(v));c.lineTo(W-p.r,y(v));c.stroke();c.fillStyle='#64748b';c.font='11px sans-serif';c.fillText(v,7,y(v)+4);});
-  if (!anchors.length) return;
-  const now=new Date(), earliest=new Date(anchors[0].anchor_at), rangeValue=$('#historyRange').value;
-  const requestedStart = rangeValue === 'all' ? earliest : new Date(now.getTime()-Number(rangeValue||168)*3600000);
-  const start = requestedStart < earliest ? earliest : requestedStart;
-  const end = new Date(now.getTime()+70*3600000), span=Math.max(1,end-start);
-  const x=t=>p.l+((new Date(t)-start)/span)*iw;
-  const historyHours=Math.max(1,(now-start)/3600000), step=Math.max(1,Math.ceil(historyHours/320)), pts=[];
-  for(let h=0;h<=historyHours;h+=step){const t=new Date(start.getTime()+h*3600000),v=rateAt(t);if(v!==null)pts.push([t,v]);}
-  pts.push([now,currentRate(now)]);
-  c.strokeStyle='#2563eb';c.lineWidth=2.6;c.beginPath();pts.forEach(([t,v],i)=>{const X=x(t),Y=y(v);i?c.lineTo(X,Y):c.moveTo(X,Y);});c.stroke();
-  c.setLineDash([6,5]);c.strokeStyle='#7c3aed';c.beginPath();
-  for(let h=0;h<=70;h++){const t=new Date(now.getTime()+h*3600000),v=clamp(currentRate(now)+h);h?c.lineTo(x(t),y(v)):c.moveTo(x(t),y(v));}
-  c.stroke();c.setLineDash([]);c.strokeStyle='#0f172a55';c.beginPath();c.moveTo(x(now),p.t);c.lineTo(x(now),H-p.b);c.stroke();
-  c.fillStyle='#0f172a';c.font='11px sans-serif';c.fillText('maintenant',Math.min(W-72,x(now)+5),H-8);
-}
-
-$$('[data-auth-tab]').forEach(b => b.onclick = () => {
-  authMode = b.dataset.authTab;
-  $$('[data-auth-tab]').forEach(x => x.classList.toggle('active', x === b));
-  $('#authSubmit').textContent = authMode === 'login' ? 'Se connecter' : 'Créer le compte';
-  $('#password').autocomplete = authMode === 'login' ? 'current-password' : 'new-password';
-});
-
-$('#authForm').onsubmit = async e => {
-  e.preventDefault(); if (!sb) return toast('Configuration Supabase manquante.');
-  const email=$('#email').value.trim(), password=$('#password').value;
-  const res = authMode === 'login' ? await sb.auth.signInWithPassword({email,password}) : await sb.auth.signUp({email,password});
-  if (res.error) return toast(res.error.message);
-  if (authMode === 'signup' && !res.data.session) return toast('Compte créé : confirmez l’e-mail reçu, puis connectez-vous.');
-  session = res.data.session; await enterSession();
-};
-
-$('#createCouple').onclick=createCouple;
-$('#joinCouple').onclick=joinCouple;
-$('#logoutPair').onclick=()=>sb.auth.signOut();
-$('#logoutBtn').onclick=()=>sb.auth.signOut();
-$('#refreshBtn').onclick=async()=>{try{await loadAll();renderAll();toast('Actualisé');}catch(e){toast(e.message||'Erreur d’actualisation');}};
-$('#setAnchor').onclick=setAnchor;
-$('#historySearch').oninput=renderHistory;
-$('#loadMore').onclick=()=>{historyLimit+=200;renderHistory();};
-$('#historyRange').onchange=renderChart;
-window.addEventListener('resize',()=>requestAnimationFrame(renderChart));
-setInterval(()=>{if(!$('#appView').classList.contains('hidden')){renderRate();renderChart();}},60000);
-init();
+async function setAnchor() { let value=Number($('#anchorValue').value); if(!Number.isFinite(value))return; value=clamp(value); const {data,error}=await sb.from('anchors').insert({couple_id:profile.couple_id,score:value,created_by:session.user.id}).select().single(); if(error)return toast(error.message); if(data&&!anchors.some(a=>a.id===data.id)){anchors.push(data);anchors.sort((a,b)=>new Date(a.anchor_at)-new Date(b.anchor_at));} if(data?.id&&typeof window.notifyPartnerOfChange==='function')window.notifyPartnerOfChange('anchors',data.id); renderAll();toast('Nouvelle référence enregistrée'); }
+function renderAll(){renderRate();renderSlots();renderRecent();renderHistory();renderChart();$('#coupleCode').textContent=couple?.join_code||'—';$('#anchorValue').value=fmt(currentRate());$('#todayLabel').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'});}
+function renderRate(){const r=currentRate();const s=status(r);$('#currentRate').textContent=fmt(r);$('#statusText').textContent='';$('#statusText').style.display='none';$('#rateCard').style.background=`linear-gradient(135deg,${s.c},#0f172a)`;}
+function renderSlots(){const grid=$('#eventGrid');grid.innerHTML='';const day=localDay();for(const[kind,name]of TYPES){const row=document.createElement('div');row.className='event-row';row.innerHTML=`<div class="event-name">${name}</div>`;for(let i=1;i<=3;i++){const e=events.find(x=>x.event_day===day&&x.kind===kind&&x.slot_no===i);const b=document.createElement('button');b.className='slot'+(e?' active':'');b.innerHTML=e?`✓ +1<span class="slot-time">${new Date(e.occurred_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span>`:'+1';b.onclick=()=>toggleSlot(kind,i);row.appendChild(b);}grid.appendChild(row);}}
+function renderRecent(){const arr=[...events].sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at)).slice(0,12);$('#recentBody').innerHTML=arr.map(e=>`<tr><td>${new Date(e.occurred_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</td><td>${typeInfo(e.kind)?.[1]||e.kind}</td><td>${fmt(resultRateForEvent(e))}</td></tr>`).join('')||'<tr><td colspan="3">Aucun événement</td></tr>';}
+function renderHistory(){const q=$('#historySearch').value.trim().toLowerCase();let arr=[...events].sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at));if(q)arr=arr.filter(e=>(typeInfo(e.kind)?.[1]||'').toLowerCase().includes(q));arr=arr.slice(0,historyLimit);$('#fullHistory').innerHTML=arr.map(e=>`<div class="history-item"><span>${new Date(e.occurred_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</span><strong>${typeInfo(e.kind)?.[1]||e.kind}</strong><span class="rate">${fmt(resultRateForEvent(e))}</span></div>`).join('')||'<p class="muted">Aucun résultat.</p>';}
+function renderChart(){const canvas=$('#curveCanvas');const dpr=window.devicePixelRatio||1;const rect=canvas.getBoundingClientRect();canvas.width=Math.max(300,rect.width*dpr);canvas.height=Math.max(220,rect.height*dpr);const c=canvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);const W=rect.width,H=rect.height,p={l:42,r:16,t:18,b:30};const iw=W-p.l-p.r,ih=H-p.t-p.b;c.clearRect(0,0,W,H);const bands=[[0,12,'#dcfce7'],[12,18,'#ecfccb'],[18,31,'#fef9c3'],[31,43,'#ffedd5'],[43,78,'#fee2e2']];const y=v=>p.t+ih-(clamp(v)/78)*ih;bands.forEach(([a,b,col])=>{c.fillStyle=col;c.fillRect(p.l,y(b),iw,y(a)-y(b));});c.strokeStyle='#cbd5e1';c.lineWidth=1;[0,12,18,31,43,78].forEach(v=>{c.beginPath();c.moveTo(p.l,y(v));c.lineTo(W-p.r,y(v));c.stroke();c.fillStyle='#64748b';c.font='11px sans-serif';c.fillText(v,7,y(v)+4);});if(!anchors.length)return;const now=new Date(),earliest=new Date(anchors[0].anchor_at),rangeValue=$('#historyRange').value;const requestedStart=rangeValue==='all'?earliest:new Date(now.getTime()-Number(rangeValue||168)*3600000);const start=requestedStart<earliest?earliest:requestedStart;const end=new Date(now.getTime()+70*3600000),span=Math.max(1,end-start);const x=t=>p.l+((new Date(t)-start)/span)*iw;const historyHours=Math.max(1,(now-start)/3600000),step=Math.max(1,Math.ceil(historyHours/320)),pts=[];for(let h=0;h<=historyHours;h+=step){const t=new Date(start.getTime()+h*3600000),v=rateAt(t);if(v!==null)pts.push([t,v]);}pts.push([now,currentRate(now)]);c.strokeStyle='#2563eb';c.lineWidth=2.6;c.beginPath();pts.forEach(([t,v],i)=>{const X=x(t),Y=y(v);i?c.lineTo(X,Y):c.moveTo(X,Y);});c.stroke();c.setLineDash([6,5]);c.strokeStyle='#7c3aed';c.beginPath();for(let h=0;h<=70;h++){const t=new Date(now.getTime()+h*3600000),v=clamp(currentRate(now)+h);h?c.lineTo(x(t),y(v)):c.moveTo(x(t),y(v));}c.stroke();c.setLineDash([]);c.strokeStyle='#0f172a55';c.beginPath();c.moveTo(x(now),p.t);c.lineTo(x(now),H-p.b);c.stroke();c.fillStyle='#0f172a';c.font='11px sans-serif';c.fillText('maintenant',Math.min(W-72,x(now)+5),H-8);}
+$$('[data-auth-tab]').forEach(b=>b.onclick=()=>{authMode=b.dataset.authTab;$$('[data-auth-tab]').forEach(x=>x.classList.toggle('active',x===b));$('#authSubmit').textContent=authMode==='login'?'Se connecter':'Créer le compte';$('#password').autocomplete=authMode==='login'?'current-password':'new-password';});
+$('#authForm').onsubmit=async e=>{e.preventDefault();if(!sb)return toast('Configuration Supabase manquante.');const email=$('#email').value.trim(),password=$('#password').value;const res=authMode==='login'?await sb.auth.signInWithPassword({email,password}):await sb.auth.signUp({email,password});if(res.error)return toast(res.error.message);if(authMode==='signup'&&!res.data.session)return toast('Compte créé : confirmez l’e-mail reçu, puis connectez-vous.');session=res.data.session;await enterSession();};
+$('#createCouple').onclick=createCouple;$('#joinCouple').onclick=joinCouple;$('#logoutPair').onclick=()=>sb.auth.signOut();$('#logoutBtn').onclick=()=>sb.auth.signOut();$('#refreshBtn').onclick=async()=>{try{await loadAll();renderAll();toast('Actualisé');}catch(e){toast(e.message||'Erreur d’actualisation');}};$('#setAnchor').onclick=setAnchor;$('#historySearch').oninput=renderHistory;$('#loadMore').onclick=()=>{historyLimit+=200;renderHistory();};$('#historyRange').onchange=renderChart;window.addEventListener('resize',()=>requestAnimationFrame(renderChart));setInterval(()=>{if(!$('#appView').classList.contains('hidden')){renderRate();renderChart();}},60000);init();
