@@ -7,7 +7,8 @@ async function toggleSlot(kind, slot) {
     events = events.filter(e => e.id !== existing.id);
     toast('Événement supprimé');
   } else {
-    const { data, error } = await sb.from('events').insert({ couple_id: profile.couple_id, event_day: day, kind, slot_no: slot, created_by: session.user.id }).select().single();
+    const occurredAt = new Date().toISOString();
+    const { data, error } = await sb.from('events').insert({ couple_id: profile.couple_id, event_day: day, kind, slot_no: slot, occurred_at: occurredAt, created_by: session.user.id }).select().single();
     if (error) { if (error.code === '23505') { await loadAll(); renderAll(); return toast('Ce +1 vient déjà d’être validé sur l’autre appareil.'); } return toast(error.message); }
     if (data && !events.some(e => e.id === data.id)) { events.push(data); events.sort((a,b) => new Date(a.occurred_at) - new Date(b.occurred_at)); }
     if (data?.id && typeof window.notifyPartnerOfChange === 'function') window.notifyPartnerOfChange('events', data.id);
