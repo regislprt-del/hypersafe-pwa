@@ -18,7 +18,19 @@ const typeInfo=k=>TYPES.find(x=>x[0]===k);
 function toast(message){const t=$('#toast');t.textContent=message;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),3200)}
 function show(id){['#authView','#pairView','#appView'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden')}
 function anchorFor(at=new Date()){const ts=new Date(at).getTime();let found=null;for(const a of anchors){if(new Date(a.anchor_at).getTime()<=ts)found=a;else break}return found}
-function rateAt(at=new Date()){const when=new Date(at),a=anchorFor(when);if(!a)return null;const aDate=new Date(a.anchor_at);let value=Number(a.score)+Math.max(0,Math.floor((when-aDate)/3600000));for(const e of events){const d=new Date(e.occurred_at);if(d>=aDate&&d<=when)value-=Number(e.impact)}return clamp(value)}
+function rateAt(at=new Date()){
+  const when=new Date(at),a=anchorFor(when);if(!a)return null;
+  const aDate=new Date(a.anchor_at);let value=clamp(Number(a.score)),cursor=aDate;
+  const relevant=events.filter(e=>{const d=new Date(e.occurred_at);return d>=aDate&&d<=when}).sort((x,y)=>new Date(x.occurred_at)-new Date(y.occurred_at));
+  for(const e of relevant){
+    const d=new Date(e.occurred_at);
+    value=clamp(value+Math.max(0,Math.floor((d-cursor)/3600000)));
+    value=clamp(value-Number(e.impact));
+    cursor=d;
+  }
+  value=clamp(value+Math.max(0,Math.floor((when-cursor)/3600000)));
+  return value;
+}
 function currentRate(at=new Date()){return rateAt(at)??0} function resultRateForEvent(target){return rateAt(new Date(target.occurred_at))??0}
 async function fetchAll(table,coupleId,orderColumn){const pageSize=1000;let from=0,all=[];while(true){const{data,error}=await sb.from(table).select('*').eq('couple_id',coupleId).order(orderColumn,{ascending:true}).range(from,from+pageSize-1);if(error)throw error;const rows=data||[];all=all.concat(rows);if(rows.length<pageSize)break;from+=pageSize}return all}
 async function restorePersistentSession(){if(!sb)return false;const{data,error}=await sb.auth.getSession();if(error||!data?.session)return false;const changedUser=!session||session.user?.id!==data.session.user?.id;session=data.session;if(changedUser||!profile)await enterSession();return true}
