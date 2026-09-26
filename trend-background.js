@@ -5,18 +5,17 @@
     if (!card || !label) return;
 
     const state = (label.textContent || '').trim().toLowerCase();
-    const bg = 'linear-gradient(90deg,#2563eb 0%,#0f172a 58%,#000 100%)';
+    let bg = 'linear-gradient(135deg,#2563eb,#1e3a8a)';
     let border = '#60a5fa';
-    let ink = '#60a5fa';
     let shadow = '0 6px 20px rgba(37,99,235,.22)';
 
     if (state === 'baisse') {
+      bg = 'linear-gradient(135deg,#22c55e,#166534)';
       border = '#4ade80';
-      ink = '#4ade80';
       shadow = '0 6px 20px rgba(34,197,94,.22)';
     } else if (state === 'hausse') {
+      bg = 'linear-gradient(135deg,#ef4444,#991b1b)';
       border = '#f87171';
-      ink = '#f87171';
       shadow = '0 6px 20px rgba(239,68,68,.22)';
     }
 
@@ -28,9 +27,9 @@
     const arrow = document.querySelector('#trendArrow');
     const value = document.querySelector('#trendValue');
     if (title) title.style.color = '#fff';
-    if (arrow) arrow.style.color = ink;
-    label.style.color = ink;
-    if (value) value.style.color = ink;
+    if (arrow) arrow.style.color = '#fff';
+    label.style.color = '#fff';
+    if (value) value.style.color = '#fff';
   }
 
   function mount() {
