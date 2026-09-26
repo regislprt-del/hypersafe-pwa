@@ -1,0 +1,96 @@
+(() => {
+  function formatRemaining(ms) {
+    const totalMinutes = Math.max(0, Math.ceil(ms / 60000));
+    const days = Math.floor(totalMinutes / 1440);
+    const hours = Math.floor((totalMinutes % 1440) / 60);
+    const minutes = totalMinutes % 60;
+    const parts = [];
+    if (days) parts.push(`${days} j`);
+    if (hours || days) parts.push(`${hours} h`);
+    parts.push(`${minutes} min`);
+    return parts.join(' ');
+  }
+
+  function updateTimeTo78() {
+    const target = document.querySelector('#timeTo78');
+    if (!target || typeof anchors === 'undefined' || typeof events === 'undefined' || typeof currentRate !== 'function' || typeof anchorFor !== 'function') return;
+
+    const now = new Date();
+    const rate = currentRate(now);
+
+    if (!anchors.length || anchorFor(now) === null) {
+      target.textContent = 'Temps restant avant le taux 78 : —';
+      return;
+    }
+
+    if (rate >= 78) {
+      target.textContent = 'Taux 78 atteint';
+      return;
+    }
+
+    const anchor = anchorFor(now);
+    const anchorAt = new Date(anchor.anchor_at);
+    let cursor = anchorAt;
+
+    const relevant = events
+      .filter(e => {
+        const d = new Date(e.occurred_at);
+        return d >= anchorAt && d <= now;
+      })
+      .sort((a,b) => new Date(a.occurred_at) - new Date(b.occurred_at));
+
+    if (relevant.length) cursor = new Date(relevant[relevant.length - 1].occurred_at);
+
+    const incrementsNeeded = Math.max(1, Math.ceil(78 - rate - 1e-9));
+    const elapsed = Math.max(0, now.getTime() - cursor.getTime());
+    const completedHours = Math.floor(elapsed / 3600000);
+    const nextIncrementAt = cursor.getTime() + (completedHours + 1) * 3600000;
+    const targetAt = nextIncrementAt + (incrementsNeeded - 1) * 3600000;
+    const remaining = Math.max(0, targetAt - now.getTime());
+
+    target.textContent = `Temps restant avant le taux 78 : ${formatRemaining(remaining)}`;
+  }
+
+  function injectStyle() {
+    if (document.querySelector('#timeTo78Style')) return;
+    const style = document.createElement('style');
+    style.id = 'timeTo78Style';
+    style.textContent = `
+      .time-to-78{
+        margin:10px 0 0;
+        padding-top:10px;
+        border-top:1px solid #eef2f7;
+        color:#475569;
+        font-size:13px;
+        font-weight:700;
+        text-align:center
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function mount() {
+    injectStyle();
+
+    const currentRenderAll = window.renderAll;
+    if (typeof currentRenderAll === 'function' && !window.__timeTo78Wrapped) {
+      window.__timeTo78Wrapped = true;
+      window.renderAll = function(...args) {
+        const result = currentRenderAll.apply(this, args);
+        updateTimeTo78();
+        return result;
+      };
+    }
+
+    updateTimeTo78();
+    setInterval(updateTimeTo78, 60000);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) updateTimeTo78();
+    });
+    window.addEventListener('focus', updateTimeTo78);
+  }
+
+  window.updateTimeTo78 = updateTimeTo78;
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
+  else mount();
+})();
