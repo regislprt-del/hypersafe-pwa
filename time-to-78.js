@@ -19,12 +19,12 @@
     const rate = currentRate(now);
 
     if (!anchors.length || anchorFor(now) === null) {
-      target.textContent = 'Temps restant avant le taux 78 : —';
+      target.innerHTML = '<span class="time-to-78-label">Temps restant avant le taux 78</span><span class="time-to-78-value">—</span>';
       return;
     }
 
     if (rate >= 78) {
-      target.textContent = 'Taux 78 atteint';
+      target.innerHTML = '<span class="time-to-78-label">Taux 78 atteint</span>';
       return;
     }
 
@@ -48,7 +48,7 @@
     const targetAt = nextIncrementAt + (incrementsNeeded - 1) * 3600000;
     const remaining = Math.max(0, targetAt - now.getTime());
 
-    target.textContent = `Temps restant avant le taux 78 : ${formatRemaining(remaining)}`;
+    target.innerHTML = `<span class="time-to-78-label">Temps restant avant le taux 78</span><span class="time-to-78-value">${formatRemaining(remaining)}</span>`;
   }
 
   function injectStyle() {
@@ -63,10 +63,22 @@
         border-radius:14px;
         background:linear-gradient(135deg,#ffedd5,#ffe4e6);
         color:#9a3412;
-        font-size:13px;
+        font-size:16px;
         font-weight:700;
         text-align:center;
         box-shadow:0 4px 12px rgba(244,114,94,.10)
+      }
+      .time-to-78-label{
+        display:block;
+        font-size:16px;
+        line-height:1.2
+      }
+      .time-to-78-value{
+        display:block;
+        margin-top:5px;
+        font-size:24px;
+        line-height:1.1;
+        font-weight:800
       }
     `;
     document.head.appendChild(style);
