@@ -59,14 +59,14 @@
       .time-to-78{
         margin:12px 0 0;
         padding:12px 14px;
-        border:1px solid #f6a8a0;
+        border:1px solid #1e3a8a;
         border-radius:14px;
-        background:linear-gradient(135deg,#ffedd5,#ffe4e6);
-        color:#9a3412;
+        background:linear-gradient(90deg,#2563eb 0%,#0f172a 58%,#000 100%);
+        color:#fff;
         font-size:16px;
         font-weight:700;
         text-align:center;
-        box-shadow:0 4px 12px rgba(244,114,94,.10)
+        box-shadow:0 4px 14px rgba(15,23,42,.22)
       }
       .time-to-78-label{
         display:block;
