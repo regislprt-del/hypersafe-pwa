@@ -12,38 +12,32 @@
   }
 
   function applyRateZoneStyle(target, rate) {
-    let background = 'linear-gradient(135deg,#475569,#0f172a)';
-    let border = '#64748b';
-    let shadow = '0 4px 14px rgba(15,23,42,.22)';
+    let background = '#f1f5f9';
+    let border = '#cbd5e1';
 
     if (Number.isFinite(rate)) {
       if (rate <= 12) {
-        background = 'linear-gradient(135deg,#22c55e,#166534)';
-        border = '#4ade80';
-        shadow = '0 4px 14px rgba(34,197,94,.24)';
+        background = '#dcfce7';
+        border = '#dcfce7';
       } else if (rate <= 18) {
-        background = 'linear-gradient(135deg,#84cc16,#4d7c0f)';
-        border = '#a3e635';
-        shadow = '0 4px 14px rgba(132,204,22,.24)';
+        background = '#ecfccb';
+        border = '#ecfccb';
       } else if (rate <= 31) {
-        background = 'linear-gradient(135deg,#eab308,#a16207)';
-        border = '#facc15';
-        shadow = '0 4px 14px rgba(234,179,8,.24)';
+        background = '#fef9c3';
+        border = '#fef9c3';
       } else if (rate <= 43) {
-        background = 'linear-gradient(135deg,#f97316,#c2410c)';
-        border = '#fb923c';
-        shadow = '0 4px 14px rgba(249,115,22,.24)';
+        background = '#ffedd5';
+        border = '#ffedd5';
       } else {
-        background = 'linear-gradient(135deg,#ef4444,#991b1b)';
-        border = '#f87171';
-        shadow = '0 4px 14px rgba(239,68,68,.24)';
+        background = '#fee2e2';
+        border = '#fee2e2';
       }
     }
 
     target.style.background = background;
     target.style.borderColor = border;
-    target.style.boxShadow = shadow;
-    target.style.color = '#fff';
+    target.style.boxShadow = '0 4px 14px rgba(15,23,42,.10)';
+    target.style.color = '#0f172a';
   }
 
   function updateTimeTo78() {
