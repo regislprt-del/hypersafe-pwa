@@ -1,7 +1,7 @@
 const CONFIG = window.APP_CONFIG || {};
 const TYPES = [
-  ['rapid', 'Rapport rapide'], ['normal', 'Rapport normal'], ['normal_plus_plus', 'Rapport normal ++'], ['fell_express', '\\u0046ellation express'],
-  ['scenario', 'Soirée scénario'], ['anal', 'Rapport \\u0061nal'], ['fell', '\\u0046ellation'], ['scenario_anal', 'Soirée scénario avec \\u0061nal']
+  ['rapid', 'Rapport rapide'], ['normal', 'Rapport normal'], ['normal_plus_plus', 'Rapport normal ++'], ['fell_express', 'Fellation express'],
+  ['scenario', 'Soirée scénario'], ['anal', 'Rapport anal'], ['fell', 'Fellation'], ['scenario_anal', 'Soirée scénario avec anal']
 ];
 const THRESHOLDS = [
   { max: 12, label: 'Très bon', c: '#22c55e' }, { max: 18, label: 'Bon', c: '#84cc16' },
