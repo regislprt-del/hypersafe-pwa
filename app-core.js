@@ -1,6 +1,6 @@
 const CONFIG = window.APP_CONFIG || {};
 const TYPES = [
-  ['rapid', 'Rapport sexuel rapide'], ['normal', 'Rapport sexuel normal'], ['fell_express', 'Fellation express'],
+  ['rapid', 'Rapport sexuel rapide'], ['normal', 'Rapport sexuel normal'], ['normal_plus_plus', 'Rapport normal ++'], ['fell_express', 'Fellation express'],
   ['scenario', 'Soirée scénario sexuel'], ['anal', 'Rapport anal'], ['fell', 'Fellation'], ['scenario_anal', 'Soirée scénario sexuel avec anal']
 ];
 const THRESHOLDS = [
