@@ -17,20 +17,20 @@
 
     if (Number.isFinite(rate)) {
       if (rate <= 12) {
-        background = '#dcfce7';
-        border = '#dcfce7';
+        background = '#4ade80';
+        border = '#4ade80';
       } else if (rate <= 18) {
-        background = '#ecfccb';
-        border = '#ecfccb';
+        background = '#a3e635';
+        border = '#a3e635';
       } else if (rate <= 31) {
-        background = '#fef9c3';
-        border = '#fef9c3';
+        background = '#facc15';
+        border = '#facc15';
       } else if (rate <= 43) {
-        background = '#ffedd5';
-        border = '#ffedd5';
+        background = '#fb923c';
+        border = '#fb923c';
       } else {
-        background = '#fee2e2';
-        border = '#fee2e2';
+        background = '#f87171';
+        border = '#f87171';
       }
     }
 
