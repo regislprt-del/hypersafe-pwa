@@ -5,18 +5,18 @@
     if (!card || !label) return;
 
     const state = (label.textContent || '').trim().toLowerCase();
-    let bg = 'linear-gradient(135deg,#2563eb,#1e3a8a)';
-    let border = '#60a5fa';
-    let shadow = '0 6px 20px rgba(37,99,235,.22)';
+    let bg = '#dbeafe';
+    let border = '#bfdbfe';
+    let shadow = '0 6px 20px rgba(37,99,235,.10)';
 
     if (state === 'baisse') {
-      bg = 'linear-gradient(135deg,#22c55e,#166534)';
-      border = '#4ade80';
-      shadow = '0 6px 20px rgba(34,197,94,.22)';
+      bg = '#dcfce7';
+      border = '#bbf7d0';
+      shadow = '0 6px 20px rgba(34,197,94,.10)';
     } else if (state === 'hausse') {
-      bg = 'linear-gradient(135deg,#ef4444,#991b1b)';
-      border = '#f87171';
-      shadow = '0 6px 20px rgba(239,68,68,.22)';
+      bg = '#fee2e2';
+      border = '#fecaca';
+      shadow = '0 6px 20px rgba(239,68,68,.10)';
     }
 
     card.style.background = bg;
