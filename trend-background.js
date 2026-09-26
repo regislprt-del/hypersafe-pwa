@@ -5,31 +5,31 @@
     if (!card || !label) return;
 
     const state = (label.textContent || '').trim().toLowerCase();
-    let bg = '#dbeafe';
-    let border = '#bfdbfe';
+    let bg = '#60a5fa';
+    let border = '#3b82f6';
     let shadow = '0 6px 20px rgba(37,99,235,.10)';
 
     if (state === 'baisse') {
-      bg = '#dcfce7';
-      border = '#bbf7d0';
+      bg = '#4ade80';
+      border = '#22c55e';
       shadow = '0 6px 20px rgba(34,197,94,.10)';
     } else if (state === 'hausse') {
-      bg = '#fee2e2';
-      border = '#fecaca';
+      bg = '#f87171';
+      border = '#ef4444';
       shadow = '0 6px 20px rgba(239,68,68,.10)';
     }
 
     card.style.background = bg;
     card.style.borderColor = border;
     card.style.boxShadow = shadow;
-    card.style.color = '#fff';
+    card.style.color = '#0f172a';
     const title = card.querySelector(':scope > span');
     const arrow = document.querySelector('#trendArrow');
     const value = document.querySelector('#trendValue');
-    if (title) title.style.color = '#fff';
-    if (arrow) arrow.style.color = '#fff';
-    label.style.color = '#fff';
-    if (value) value.style.color = '#fff';
+    if (title) title.style.color = '#0f172a';
+    if (arrow) arrow.style.color = '#0f172a';
+    label.style.color = '#0f172a';
+    if (value) value.style.color = '#0f172a';
   }
 
   function mount() {
