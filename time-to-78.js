@@ -57,13 +57,16 @@
     style.id = 'timeTo78Style';
     style.textContent = `
       .time-to-78{
-        margin:10px 0 0;
-        padding-top:10px;
-        border-top:1px solid #eef2f7;
-        color:#475569;
+        margin:12px 0 0;
+        padding:12px 14px;
+        border:1px solid #f6a8a0;
+        border-radius:14px;
+        background:linear-gradient(135deg,#ffedd5,#ffe4e6);
+        color:#9a3412;
         font-size:13px;
         font-weight:700;
-        text-align:center
+        text-align:center;
+        box-shadow:0 4px 12px rgba(244,114,94,.10)
       }
     `;
     document.head.appendChild(style);
