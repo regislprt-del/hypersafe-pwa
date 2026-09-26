@@ -19,7 +19,7 @@
     const rate = currentRate(now);
 
     if (!anchors.length || anchorFor(now) === null) {
-      target.innerHTML = '<span class="time-to-78-label">Temps restant avant le taux 78</span><span class="time-to-78-value">—</span>';
+      target.innerHTML = '<span class="time-to-78-label">Temps restant avant le taux maximum</span><span class="time-to-78-value">—</span>';
       return;
     }
 
@@ -48,7 +48,7 @@
     const targetAt = nextIncrementAt + (incrementsNeeded - 1) * 3600000;
     const remaining = Math.max(0, targetAt - now.getTime());
 
-    target.innerHTML = `<span class="time-to-78-label">Temps restant avant le taux 78</span><span class="time-to-78-value">${formatRemaining(remaining)}</span>`;
+    target.innerHTML = `<span class="time-to-78-label">Temps restant avant le taux maximum</span><span class="time-to-78-value">${formatRemaining(remaining)}</span>`;
   }
 
   function injectStyle() {
