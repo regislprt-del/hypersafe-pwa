@@ -18,6 +18,53 @@
     renderAll();
   }
 
+  async function changeHistoryEventType(id, newKind) {
+    const event = events.find(e => e.id === id);
+    if (!event || event.kind === newKind) return;
+
+    if (!TYPES.some(([kind]) => kind === newKind)) {
+      toast('Type de rapport invalide');
+      renderHistory();
+      return;
+    }
+
+    const usedSlots = new Set(
+      events
+        .filter(e => e.id !== id && e.event_day === event.event_day && e.kind === newKind)
+        .map(e => Number(e.slot_no))
+    );
+
+    let targetSlot = Number(event.slot_no);
+    if (usedSlots.has(targetSlot)) {
+      targetSlot = [1, 2, 3].find(slot => !usedSlots.has(slot));
+    }
+
+    if (!targetSlot) {
+      toast('3 rapports de ce type sont déjà enregistrés ce jour-là');
+      renderHistory();
+      return;
+    }
+
+    const { data, error } = await sb
+      .from('events')
+      .update({ kind: newKind, slot_no: targetSlot })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      toast(error.code === '23505' ? '3 rapports de ce type sont déjà enregistrés ce jour-là' : error.message);
+      renderHistory();
+      return;
+    }
+
+    const index = events.findIndex(e => e.id === id);
+    if (index !== -1) events[index] = data;
+
+    toast('Type de rapport modifié');
+    renderAll();
+  }
+
   function eventYear(event) {
     const day = String(event?.event_day || '');
     if (/^\d{4}-/.test(day)) return Number(day.slice(0, 4));
@@ -72,11 +119,15 @@
     renderHistoryTypeStats();
 
     arr = arr.slice(0, 20);
-    container.innerHTML = arr.map(e => `<div class="history-item"><span>${new Date(e.occurred_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}<button class="time-edit-btn" type="button" title="Modifier l’heure" aria-label="Modifier l’heure du rapport" onclick="window.openEventTimeEditor('${e.id}')">🕒</button></span><strong>${typeInfo(e.kind)?.[1]||e.kind}</strong><span class="rate">${fmt(resultRateForEvent(e))}</span><button class="history-delete-btn" type="button" title="Supprimer l’événement" aria-label="Supprimer l’événement" onclick="window.deleteHistoryEvent('${e.id}')">🗑️</button></div>`).join('') || '<p class="muted">Aucun résultat.</p>';
+    container.innerHTML = arr.map(e => {
+      const typeOptions = TYPES.map(([kind, label]) => `<option value="${kind}"${kind === e.kind ? ' selected' : ''}>${label}</option>`).join('');
+      return `<div class="history-item"><span>${new Date(e.occurred_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}<button class="time-edit-btn" type="button" title="Modifier l’heure" aria-label="Modifier l’heure du rapport" onclick="window.openEventTimeEditor('${e.id}')">🕒</button></span><select class="history-type-select" aria-label="Modifier le type de rapport" title="Modifier le type de rapport" onchange="window.changeHistoryEventType('${e.id}', this.value)">${typeOptions}</select><span class="rate">${fmt(resultRateForEvent(e))}</span><button class="history-delete-btn" type="button" title="Supprimer l’événement" aria-label="Supprimer l’événement" onclick="window.deleteHistoryEvent('${e.id}')">🗑️</button></div>`;
+    }).join('') || '<p class="muted">Aucun résultat.</p>';
   }
 
   window.renderHistory = renderLimitedHistory;
   window.deleteHistoryEvent = deleteHistoryEvent;
+  window.changeHistoryEventType = changeHistoryEventType;
   historyLimit = 20;
 
   const search = document.querySelector('#historySearch');
