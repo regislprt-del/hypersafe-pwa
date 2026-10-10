@@ -1,4 +1,107 @@
 (() => {
+  function setPastEventDefaults() {
+    const typeSelect = document.querySelector('#historyPastType');
+    const dateInput = document.querySelector('#historyPastDate');
+    const timeInput = document.querySelector('#historyPastTime');
+    if (!typeSelect || !dateInput || !timeInput || typeof TYPES === 'undefined') return;
+
+    if (!typeSelect.options.length) {
+      typeSelect.innerHTML = TYPES.map(([kind, label]) => `<option value="${kind}">${label}</option>`).join('');
+    }
+
+    const now = new Date();
+    dateInput.max = localDay(now);
+
+    if (!dateInput.value) {
+      const previousDay = new Date(now);
+      previousDay.setDate(previousDay.getDate() - 1);
+      dateInput.value = localDay(previousDay);
+    }
+
+    if (!timeInput.value) {
+      timeInput.value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    }
+  }
+
+  async function addPastHistoryEvent() {
+    const typeSelect = document.querySelector('#historyPastType');
+    const dateInput = document.querySelector('#historyPastDate');
+    const timeInput = document.querySelector('#historyPastTime');
+    const button = document.querySelector('#historyPastAddBtn');
+    if (!typeSelect || !dateInput || !timeInput || !button) return;
+    if (!sb || !session?.user?.id || !profile?.couple_id) return toast('Connexion requise');
+
+    const kind = typeSelect.value;
+    const day = dateInput.value;
+    const time = timeInput.value;
+
+    if (!TYPES.some(([value]) => value === kind) || !day || !time) {
+      return toast('Choisis le type, la date et l’heure');
+    }
+
+    const occurredAt = new Date(`${day}T${time}:00`);
+    if (Number.isNaN(occurredAt.getTime())) return toast('Date ou heure invalide');
+    if (occurredAt.getTime() > Date.now()) return toast('La date et l’heure doivent être dans le passé');
+
+    button.disabled = true;
+    button.textContent = 'Ajout…';
+
+    try {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const usedSlots = new Set(
+          events
+            .filter(e => e.event_day === day && e.kind === kind)
+            .map(e => Number(e.slot_no))
+        );
+        const slot = [1, 2, 3].find(value => !usedSlots.has(value));
+
+        if (!slot) {
+          toast('3 rapports de ce type sont déjà enregistrés à cette date');
+          return;
+        }
+
+        const { data, error } = await sb
+          .from('events')
+          .insert({
+            couple_id: profile.couple_id,
+            event_day: day,
+            kind,
+            slot_no: slot,
+            occurred_at: occurredAt.toISOString(),
+            created_by: session.user.id
+          })
+          .select()
+          .single();
+
+        if (error?.code === '23505' && attempt === 0) {
+          await loadAll();
+          continue;
+        }
+
+        if (error) {
+          toast(error.message);
+          return;
+        }
+
+        if (data && !events.some(e => e.id === data.id)) {
+          events.push(data);
+          events.sort((a, b) => new Date(a.occurred_at) - new Date(b.occurred_at));
+        }
+
+        if (data?.id && typeof window.notifyPartnerOfChange === 'function') {
+          window.notifyPartnerOfChange('events', data.id);
+        }
+
+        toast('Rapport passé ajouté');
+        renderAll();
+        return;
+      }
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Ajouter le rapport';
+    }
+  }
+
   async function deleteHistoryEvent(id) {
     const event = events.find(e => e.id === id);
     if (!event) return;
@@ -103,6 +206,7 @@
   }
 
   function renderLimitedHistory() {
+    setPastEventDefaults();
     const search = document.querySelector('#historySearch');
     const container = document.querySelector('#fullHistory');
     if (!search || !container || typeof events === 'undefined') return;
@@ -136,8 +240,12 @@
   const statsYear = document.querySelector('#historyStatsYear');
   if (statsYear) statsYear.onchange = renderHistoryTypeStats;
 
+  const pastAddButton = document.querySelector('#historyPastAddBtn');
+  if (pastAddButton) pastAddButton.onclick = addPastHistoryEvent;
+
   const loadMore = document.querySelector('#loadMore');
   if (loadMore) loadMore.style.display = 'none';
 
+  setPastEventDefaults();
   renderLimitedHistory();
 })();
