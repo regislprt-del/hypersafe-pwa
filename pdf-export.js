@@ -241,6 +241,7 @@
       if (!jsPDF) throw new Error('Le module PDF n’est pas disponible. Vérifie la connexion internet puis réessaie.');
 
       const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait', compress:true });
+      if (typeof doc.autoTable !== 'function') throw new Error('Le module de tableaux PDF n’est pas disponible. Vérifie la connexion internet puis réessaie.');
       const now = new Date();
       const rateNow = currentRate(now);
       const rate72 = rateAt(new Date(now.getTime() - 72 * 3600000));
