@@ -65,7 +65,7 @@
     const row = document.createElement('div');
     row.id = 'manualAdjustCard';
     row.className = 'setting-row';
-    row.innerHTML = `<div class="manual-adjust-card"><h3>Ajustement manuel du niveau psychologique</h3><p>Permet de corriger manuellement le niveau de −1 ou +1.</p><div class="manual-adjust-actions"><button id="manualMinus" class="manual-adjust-btn manual-minus" type="button">−1</button><button id="manualPlus" class="manual-adjust-btn manual-plus" type="button">+1</button></div><div class="manual-adjust-current">Niveau actuel : <strong id="manualAdjustValue">—</strong></div></div>`;
+    row.innerHTML = `<div class="manual-adjust-card"><h3>Ajustement manuel du niveau</h3><p>Permet de corriger manuellement le niveau de −1 ou +1.</p><div class="manual-adjust-actions"><button id="manualMinus" class="manual-adjust-btn manual-minus" type="button">−1</button><button id="manualPlus" class="manual-adjust-btn manual-plus" type="button">+1</button></div><div class="manual-adjust-current">Niveau actuel : <strong id="manualAdjustValue">—</strong></div></div>`;
     settingsContent.prepend(row);
     document.getElementById('manualMinus').addEventListener('click', () => adjust(-1));
     document.getElementById('manualPlus').addEventListener('click', () => adjust(1));
