@@ -60,7 +60,7 @@
   function mount() {
     injectStyles();
     if (document.getElementById('manualAdjustCard')) return;
-    const settingsContent = document.querySelector('.settings-menu .settings-content');
+    const settingsContent = document.querySelector('.settings-card .settings-content');
     if (!settingsContent) return;
     const row = document.createElement('div');
     row.id = 'manualAdjustCard';
