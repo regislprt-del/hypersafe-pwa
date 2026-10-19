@@ -175,6 +175,123 @@
     return Number.isNaN(date.getTime()) ? null : date.getFullYear();
   }
 
+  const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+  function eventParts(event) {
+    const day = String(event?.event_day || '');
+    const match = day.match(/^(\d{4})-(\d{2})-/);
+    if (match) return { year: Number(match[1]), month: Number(match[2]) };
+    const date = new Date(event?.occurred_at);
+    if (Number.isNaN(date.getTime())) return { year: null, month: null };
+    return { year: date.getFullYear(), month: date.getMonth() + 1 };
+  }
+
+  function countEventsBetween(start, end) {
+    const startTs = start.getTime();
+    const endTs = end.getTime();
+    return events.filter(event => {
+      const ts = new Date(event.occurred_at).getTime();
+      return Number.isFinite(ts) && ts >= startTs && ts < endTs;
+    }).length;
+  }
+
+  function percentChange(current, previous) {
+    if (previous === 0) return current === 0 ? '0%' : 'Nouveau';
+    const value = Math.round(((current - previous) / previous) * 100);
+    return `${value > 0 ? '+' : ''}${value}%`;
+  }
+
+  function renderAdvancedStats() {
+    if (typeof events === 'undefined' || typeof TYPES === 'undefined') return;
+
+    const now = new Date();
+    const dayMs = 86400000;
+    const start7 = new Date(now.getTime() - 7 * dayMs);
+    const start30 = new Date(now.getTime() - 30 * dayMs);
+    const start60 = new Date(now.getTime() - 60 * dayMs);
+
+    const count7 = countEventsBetween(start7, now);
+    const count30 = countEventsBetween(start30, now);
+    const previous30 = countEventsBetween(start60, start30);
+    const weeklyAverage = count30 * 7 / 30;
+
+    const last30Events = events.filter(event => {
+      const ts = new Date(event.occurred_at).getTime();
+      return Number.isFinite(ts) && ts >= start30.getTime() && ts < now.getTime();
+    });
+
+    const typeCounts = new Map();
+    last30Events.forEach(event => typeCounts.set(event.kind, (typeCounts.get(event.kind) || 0) + 1));
+    let topKind = null;
+    let topCount = 0;
+    for (const [kind] of TYPES) {
+      const count = typeCounts.get(kind) || 0;
+      if (count > topCount) {
+        topKind = kind;
+        topCount = count;
+      }
+    }
+
+    const currentYear = now.getFullYear();
+    const previousYear = currentYear - 1;
+    const currentYearCount = events.filter(event => eventYear(event) === currentYear).length;
+    const previousYearCount = events.filter(event => eventYear(event) === previousYear).length;
+
+    const currentMonthStart = new Date(currentYear, now.getMonth(), 1);
+    const nextMonthStart = new Date(currentYear, now.getMonth() + 1, 1);
+    const previousMonthStart = new Date(currentYear, now.getMonth() - 1, 1);
+    const currentMonthCount = countEventsBetween(currentMonthStart, nextMonthStart);
+    const previousMonthCount = countEventsBetween(previousMonthStart, currentMonthStart);
+
+    const setText = (selector, value) => {
+      const el = document.querySelector(selector);
+      if (el) el.textContent = value;
+    };
+
+    setText('#stats7Days', count7);
+    setText('#stats30Days', count30);
+    setText('#statsWeeklyAverage', fmt(weeklyAverage));
+    setText('#statsTopType', topKind ? (typeInfo(topKind)?.[1] || topKind) : '—');
+    setText('#statsTopTypeCount', topKind ? `${topCount} événement${topCount > 1 ? 's' : ''} sur 30 jours` : 'Aucun événement sur 30 jours');
+    setText('#stats30DayChange', percentChange(count30, previous30));
+    setText('#stats30DayChangeDetail', `${count30} vs ${previous30} événements`);
+
+    setText('#statsYearCompareLabel', `${currentYear} vs ${previousYear}`);
+    setText('#statsYearCompare', `${currentYearCount} / ${previousYearCount}`);
+    setText('#statsYearDelta', percentChange(currentYearCount, previousYearCount));
+
+    const currentMonthName = MONTHS_FR[now.getMonth()];
+    const previousMonthDate = new Date(currentYear, now.getMonth() - 1, 1);
+    const previousMonthName = MONTHS_FR[previousMonthDate.getMonth()];
+    setText('#statsMonthCompareLabel', `${currentMonthName} vs ${previousMonthName}`);
+    setText('#statsMonthCompare', `${currentMonthCount} / ${previousMonthCount}`);
+    setText('#statsMonthDelta', percentChange(currentMonthCount, previousMonthCount));
+
+    setText('#statsRollingCompare', `${count30} / ${previous30}`);
+    setText('#statsRollingDelta', percentChange(count30, previous30));
+  }
+
+  function renderHistoryFilters() {
+    const yearSelect = document.querySelector('#historyFilterYear');
+    const monthSelect = document.querySelector('#historyFilterMonth');
+    const typeSelect = document.querySelector('#historyFilterType');
+    if (!yearSelect || !monthSelect || !typeSelect || typeof events === 'undefined' || typeof TYPES === 'undefined') return;
+
+    const selectedYear = yearSelect.value || 'all';
+    const selectedMonth = monthSelect.value || 'all';
+    const selectedType = typeSelect.value || 'all';
+
+    const years = [...new Set(events.map(eventYear).filter(Number.isFinite))].sort((a, b) => b - a);
+    yearSelect.innerHTML = '<option value="all">Toutes les années</option>' + years.map(year => `<option value="${year}">${year}</option>`).join('');
+    yearSelect.value = years.map(String).includes(selectedYear) ? selectedYear : 'all';
+
+    monthSelect.innerHTML = '<option value="all">Tous les mois</option>' + MONTHS_FR.map((label, index) => `<option value="${index + 1}">${label}</option>`).join('');
+    monthSelect.value = selectedMonth === 'all' || (Number(selectedMonth) >= 1 && Number(selectedMonth) <= 12) ? selectedMonth : 'all';
+
+    typeSelect.innerHTML = '<option value="all">Tous les types</option>' + TYPES.map(([kind, label]) => `<option value="${kind}">${label}</option>`).join('');
+    typeSelect.value = selectedType === 'all' || TYPES.some(([kind]) => kind === selectedType) ? selectedType : 'all';
+  }
+
   function renderHistoryTypeStats() {
     const select = document.querySelector('#historyStatsYear');
     const container = document.querySelector('#historyTypeStats');
@@ -207,15 +324,32 @@
 
   function renderLimitedHistory() {
     setPastEventDefaults();
+    renderHistoryFilters();
+    renderAdvancedStats();
+
     const search = document.querySelector('#historySearch');
     const container = document.querySelector('#fullHistory');
+    const yearSelect = document.querySelector('#historyFilterYear');
+    const monthSelect = document.querySelector('#historyFilterMonth');
+    const typeSelect = document.querySelector('#historyFilterType');
     if (!search || !container || typeof events === 'undefined') return;
 
     const q = search.value.trim().toLowerCase();
-    let arr = [...events]
-      .sort((a, b) => new Date(b.occurred_at) - new Date(a.occurred_at))
-      .slice(0, 300);
+    const selectedYear = yearSelect?.value || 'all';
+    const selectedMonth = monthSelect?.value || 'all';
+    const selectedType = typeSelect?.value || 'all';
 
+    let arr = [...events].sort((a, b) => new Date(b.occurred_at) - new Date(a.occurred_at));
+
+    if (selectedYear !== 'all') {
+      arr = arr.filter(event => eventParts(event).year === Number(selectedYear));
+    }
+    if (selectedMonth !== 'all') {
+      arr = arr.filter(event => eventParts(event).month === Number(selectedMonth));
+    }
+    if (selectedType !== 'all') {
+      arr = arr.filter(event => event.kind === selectedType);
+    }
     if (q) {
       arr = arr.filter(e => (typeInfo(e.kind)?.[1] || '').toLowerCase().includes(q));
     }
@@ -236,6 +370,11 @@
 
   const search = document.querySelector('#historySearch');
   if (search) search.oninput = renderLimitedHistory;
+
+  ['#historyFilterYear', '#historyFilterMonth', '#historyFilterType'].forEach(selector => {
+    const element = document.querySelector(selector);
+    if (element) element.onchange = renderLimitedHistory;
+  });
 
   const statsYear = document.querySelector('#historyStatsYear');
   if (statsYear) statsYear.onchange = renderHistoryTypeStats;
