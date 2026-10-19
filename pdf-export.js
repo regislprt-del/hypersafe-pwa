@@ -248,11 +248,14 @@
       const delta72 = rate72 === null ? null : Math.round((rateNow - rate72) * 10) / 10;
 
       const start7 = new Date(now.getTime() - 7 * DAY_MS);
+      const start14 = new Date(now.getTime() - 14 * DAY_MS);
       const start30 = new Date(now.getTime() - 30 * DAY_MS);
       const start60 = new Date(now.getTime() - 60 * DAY_MS);
       const count7 = countBetween(start7, now);
+      const previous7 = countBetween(start14, start7);
       const count30 = countBetween(start30, now);
       const previous30 = countBetween(start60, start30);
+      const dailyAverage = count30 / 30;
       const weeklyAverage = count30 * 7 / 30;
       const last30 = events.filter(event => {
         const date = eventDate(event);
@@ -294,14 +297,20 @@
       drawMetricCard(doc, 51, y, 34, 'Tendance 72h', delta72 === null ? '—' : `${delta72 > 0 ? '+' : ''}${fmt(delta72)}`, delta72 === null ? 'données insuffisantes' : 'points');
       drawMetricCard(doc, 88, y, 34, '7 jours', count7, 'événements');
       drawMetricCard(doc, 125, y, 34, '30 jours', count30, 'événements');
-      drawMetricCard(doc, 162, y, 34, 'Moy. hebdo', fmt(weeklyAverage), 'sur 30 jours');
+      drawMetricCard(doc, 162, y, 34, 'Moy. quotidienne', fmt(dailyAverage), 'sur 30 jours');
       y += 31;
-      drawMetricCard(doc, 14, y, 58, 'Type le plus fréquent (30 j)', top30?.label || '—', top30 ? `${top30.count} événement${top30.count > 1 ? 's' : ''}` : 'aucun événement');
-      drawMetricCard(doc, 76, y, 38, '30 j vs précédents', percentChange(count30, previous30), `${count30} vs ${previous30}`);
-      drawMetricCard(doc, 118, y, 38, `${currentYear} vs ${previousYear}`, percentChange(currentYearEvents.length, previousYearEvents.length), `${currentYearEvents.length} vs ${previousYearEvents.length}`);
-      drawMetricCard(doc, 160, y, 36, 'Mois en cours', percentChange(thisMonth, previousMonth), `${thisMonth} vs ${previousMonth}`);
-      y += 34;
+      drawMetricCard(doc, 14, y, 34, 'Moy. hebdo', fmt(weeklyAverage), 'sur 30 jours');
+      drawMetricCard(doc, 51, y, 58, 'Type le plus fréquent (30 j)', top30?.label || '—', top30 ? `${top30.count} événement${top30.count > 1 ? 's' : ''}` : 'aucun événement');
+      drawMetricCard(doc, 112, y, 40, 'Évolution 7 jours', percentChange(count7, previous7), `${count7} vs ${previous7}`);
+      drawMetricCard(doc, 155, y, 41, 'Évolution 30 jours', percentChange(count30, previous30), `${count30} vs ${previous30}`);
+      y += 31;
+      drawMetricCard(doc, 14, y, 56, `${currentYear} vs ${previousYear}`, percentChange(currentYearEvents.length, previousYearEvents.length), `${currentYearEvents.length} vs ${previousYearEvents.length}`);
+      drawMetricCard(doc, 73, y, 56, 'Mois en cours', percentChange(thisMonth, previousMonth), `${thisMonth} vs ${previousMonth}`);
+      drawMetricCard(doc, 132, y, 64, '30 derniers j. vs 30 précédents', percentChange(count30, previous30), `${count30} vs ${previous30}`);
+      y += 31;
 
+      doc.addPage();
+      y = 18;
       y = sectionTitle(doc, 'Courbes et tendances', y);
       const ratePoints = buildRatePoints(90);
       drawLineChart(doc, 14, y, 182, 62, ratePoints, 'Évolution du taux sur les 90 derniers jours', 0, 78);
