@@ -207,12 +207,15 @@
     const now = new Date();
     const dayMs = 86400000;
     const start7 = new Date(now.getTime() - 7 * dayMs);
+    const start14 = new Date(now.getTime() - 14 * dayMs);
     const start30 = new Date(now.getTime() - 30 * dayMs);
     const start60 = new Date(now.getTime() - 60 * dayMs);
 
     const count7 = countEventsBetween(start7, now);
+    const previous7 = countEventsBetween(start14, start7);
     const count30 = countEventsBetween(start30, now);
     const previous30 = countEventsBetween(start60, start30);
+    const dailyAverage = count30 / 30;
     const weeklyAverage = count30 * 7 / 30;
 
     const last30Events = events.filter(event => {
@@ -250,9 +253,12 @@
 
     setText('#stats7Days', count7);
     setText('#stats30Days', count30);
+    setText('#statsDailyAverage', fmt(dailyAverage));
     setText('#statsWeeklyAverage', fmt(weeklyAverage));
     setText('#statsTopType', topKind ? (typeInfo(topKind)?.[1] || topKind) : '—');
     setText('#statsTopTypeCount', topKind ? `${topCount} événement${topCount > 1 ? 's' : ''} sur 30 jours` : 'Aucun événement sur 30 jours');
+    setText('#stats7DayChange', percentChange(count7, previous7));
+    setText('#stats7DayChangeDetail', `${count7} vs ${previous7} événements`);
     setText('#stats30DayChange', percentChange(count30, previous30));
     setText('#stats30DayChangeDetail', `${count30} vs ${previous30} événements`);
 
