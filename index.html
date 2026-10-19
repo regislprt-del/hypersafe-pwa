@@ -10,7 +10,7 @@
   <link rel="icon" href="icons/icon-192.png?v=10" type="image/png" />
   <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=10" />
   <link rel="manifest" href="manifest.webmanifest?v=10" />
-  <link rel="stylesheet" href="styles.css?v=18" />
+  <link rel="stylesheet" href="styles.css?v=19" />
   <title>Gestion Hypersexualité</title>
 </head>
 <body>
@@ -36,8 +36,10 @@
     <div class="stats-dashboard-grid">
       <div class="stats-kpi"><span>7 derniers jours</span><strong id="stats7Days">0</strong><small>événements</small></div>
       <div class="stats-kpi"><span>30 derniers jours</span><strong id="stats30Days">0</strong><small>événements</small></div>
+      <div class="stats-kpi"><span>Moyenne quotidienne</span><strong id="statsDailyAverage">0</strong><small>sur les 30 derniers jours</small></div>
       <div class="stats-kpi"><span>Moyenne hebdomadaire</span><strong id="statsWeeklyAverage">0</strong><small>sur les 30 derniers jours</small></div>
       <div class="stats-kpi stats-kpi-wide"><span>Type le plus fréquent</span><strong id="statsTopType">—</strong><small id="statsTopTypeCount">Aucun événement</small></div>
+      <div class="stats-kpi"><span>Évolution sur 7 jours</span><strong id="stats7DayChange">0%</strong><small id="stats7DayChangeDetail">vs 7 jours précédents</small></div>
       <div class="stats-kpi"><span>Évolution sur 30 jours</span><strong id="stats30DayChange">0%</strong><small id="stats30DayChangeDetail">vs 30 jours précédents</small></div>
     </div>
     <div class="stats-compare-title">Comparaison de périodes</div>
@@ -57,6 +59,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
-  <script src="config.js?v=10"></script><script src="app-core.js?v=16"></script><script src="app-ui.js?v=16"></script><script src="event-time-edit.js?v=13"></script><script src="history-control.js?v=18"></script><script src="recent-3days.js?v=14"></script><script src="trend-background.js?v=15"></script>
-  <script src="auth-redirect.js?v=10"></script><script src="push-notifications.js?v=10"></script><script src="pdf-export.js?v=1"></script><script src="manual-adjust.js?v=11"></script><script src="reset-control.js?v=10"></script><script src="day-reset.js?v=10"></script><script src="report-count-7days.js?v=14"></script><script src="time-to-78.js?v=22"></script>
+  <script src="config.js?v=10"></script><script src="app-core.js?v=16"></script><script src="app-ui.js?v=16"></script><script src="event-time-edit.js?v=13"></script><script src="history-control.js?v=19"></script><script src="recent-3days.js?v=14"></script><script src="trend-background.js?v=15"></script>
+  <script src="auth-redirect.js?v=10"></script><script src="push-notifications.js?v=10"></script><script src="pdf-export.js?v=2"></script><script src="manual-adjust.js?v=11"></script><script src="reset-control.js?v=10"></script><script src="day-reset.js?v=10"></script><script src="report-count-7days.js?v=14"></script><script src="time-to-78.js?v=22"></script>
 </body></html>
