@@ -505,6 +505,41 @@
     safeText(doc, 'Barres : événements / mois  •  Ligne : moyenne mobile 3 mois', x, bottom + 9);
   }
 
+  function drawZoneChart(doc, x, y, w, h, rows, title) {
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(10);
+    doc.setTextColor(15,23,42);
+    safeText(doc, title, x, y);
+
+    const colors = [
+      [74,222,128],
+      [163,230,53],
+      [250,204,21],
+      [251,146,60],
+      [248,113,113]
+    ];
+    const top = y + 6, bottom = top + h - 13, left = x + 8, right = x + w;
+    const gap = 4;
+    const barW = (right - left - gap * (rows.length - 1)) / Math.max(1, rows.length);
+
+    doc.setDrawColor(226,232,240);
+    doc.line(left, bottom, right, bottom);
+
+    rows.forEach((row,index) => {
+      const value = Number(row.value) || 0;
+      const bh = (value / 100) * (bottom - top);
+      const bx = left + index * (barW + gap);
+      doc.setFillColor(...colors[index % colors.length]);
+      doc.rect(bx, bottom - bh, barW, bh, 'F');
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(6.5);
+      doc.setTextColor(71,85,105);
+      safeText(doc, row.label, bx + barW/2, bottom + 4, { align:'center' });
+      doc.setTextColor(15,23,42);
+      safeText(doc, row.displayValue ?? `${value}%`, bx + barW/2, Math.max(top + 4, bottom - bh - 1.5), { align:'center' });
+    });
+  }
+
   function drawSummaryText(doc, textValue, y) {
     const lines = doc.splitTextToSize(textValue, 182);
     doc.setFillColor(248,250,252);
