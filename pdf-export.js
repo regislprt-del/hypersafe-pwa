@@ -156,16 +156,38 @@
     doc.setTextColor(15,23,42);
     safeText(doc, title, x, y);
     const top = y + 5, bottom = top + h - 10, left = x + 10, right = x + w;
+    const chartHeight = bottom - top;
+    const valueToY = value => bottom - ((value - yMin) / Math.max(1, yMax - yMin)) * chartHeight;
+
+    if (yMin === 0 && yMax === 78) {
+      const levelBands = [
+        [0,12,[74,222,128]],
+        [12,18,[163,230,53]],
+        [18,31,[250,204,21]],
+        [31,43,[251,146,60]],
+        [43,78,[248,113,113]]
+      ];
+      levelBands.forEach(([min,max,color]) => {
+        const bandTop = valueToY(max);
+        const bandBottom = valueToY(min);
+        doc.setFillColor(...color);
+        doc.rect(left, bandTop, right - left, bandBottom - bandTop, 'F');
+      });
+    }
+
     doc.setDrawColor(203,213,225);
     doc.setLineWidth(0.25);
 
-    const ticks = [yMin, Math.round((yMax-yMin)*.25+yMin), Math.round((yMax-yMin)*.5+yMin), Math.round((yMax-yMin)*.75+yMin), yMax];
+    const ticks = yMin === 0 && yMax === 78
+      ? [0,12,18,31,43,78]
+      : [yMin, Math.round((yMax-yMin)*.25+yMin), Math.round((yMax-yMin)*.5+yMin), Math.round((yMax-yMin)*.75+yMin), yMax];
+
     ticks.forEach(v => {
-      const py = bottom - ((v - yMin) / Math.max(1, yMax - yMin)) * (bottom - top);
+      const py = valueToY(v);
       doc.line(left, py, right, py);
       doc.setFont('helvetica','normal');
       doc.setFontSize(6.5);
-      doc.setTextColor(100,116,139);
+      doc.setTextColor(71,85,105);
       safeText(doc, v, x, py + 2);
     });
 
@@ -179,7 +201,7 @@
     const maxTime = points.at(-1).date.getTime();
     const span = Math.max(1, maxTime - minTime);
     const px = date => left + ((date.getTime() - minTime) / span) * (right - left);
-    const py = value => bottom - ((value - yMin) / Math.max(1, yMax - yMin)) * (bottom - top);
+    const py = value => valueToY(value);
 
     doc.setDrawColor(0,0,0);
     doc.setLineWidth(0.8);
