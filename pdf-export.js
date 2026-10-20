@@ -96,6 +96,23 @@
     return points;
   }
 
+  function buildCurrentYearRatePoints() {
+    if (!anchors.length) return [];
+    const now = new Date();
+    const earliest = new Date(anchors[0].anchor_at);
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+    const start = yearStart < earliest ? earliest : yearStart;
+    const points = [];
+    const step = 24 * 3600000;
+    for (let t = start.getTime(); t < now.getTime(); t += step) {
+      const date = new Date(t);
+      const value = rateAt(date);
+      if (value !== null) points.push({ date, value });
+    }
+    points.push({ date: now, value: currentRate(now) });
+    return points;
+  }
+
   function safeText(doc, text, x, y, options) {
     doc.text(String(text ?? '—'), x, y, options);
   }
@@ -289,6 +306,9 @@
       y = sectionTitle(doc, 'Courbes et tendances', y);
       const ratePoints = buildRatePoints(90);
       drawLineChart(doc, 14, y, 182, 62, ratePoints, 'Évolution du taux sur les 90 derniers jours', 0, 78);
+      y += 68;
+      const currentYearRatePoints = buildCurrentYearRatePoints();
+      drawLineChart(doc, 14, y, 182, 62, currentYearRatePoints, `Évolution du taux sur l’année en cours - ${currentYear}`, 0, 78);
       y += 68;
       drawBarChart(doc, 14, y, 182, 56, monthlySeries(12), 'Nombre d’événements par mois - 12 derniers mois');
       y += 62;
