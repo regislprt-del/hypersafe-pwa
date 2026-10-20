@@ -299,11 +299,9 @@
 
   function monthlyAverageRateSeries(year) {
     const now = new Date();
-    const firstMonth = year === 2026 ? 8 : 0;
-    const lastMonth = year === now.getFullYear() ? now.getMonth() : 11;
     const rows = [];
 
-    for (let month = firstMonth; month <= lastMonth; month++) {
+    for (let month = 0; month <= 11; month++) {
       const start = new Date(year, month, 1);
       let end = new Date(year, month + 1, 1);
 
@@ -311,15 +309,37 @@
         end = now;
       }
 
+      if (year === now.getFullYear() && month > now.getMonth()) {
+        rows.push({
+          label: MONTHS_FR[month],
+          value: null,
+          displayValue: '—',
+          current: false,
+          noData: true
+        });
+        continue;
+      }
+
       const stats = rateStatistics(start, end, 3);
-      if (stats.average === null) continue;
+
+      if (stats.average === null) {
+        rows.push({
+          label: MONTHS_FR[month],
+          value: null,
+          displayValue: '—',
+          current: false,
+          noData: true
+        });
+        continue;
+      }
 
       const value = Math.round(stats.average * 10) / 10;
       rows.push({
         label: MONTHS_FR[month],
         value,
         displayValue: value.toLocaleString('fr-FR',{maximumFractionDigits:1}),
-        current: year === now.getFullYear() && month === now.getMonth()
+        current: year === now.getFullYear() && month === now.getMonth(),
+        noData: false
       });
     }
 
@@ -551,37 +571,38 @@
     safeText(doc, 'Barres : événements / mois  •  Ligne : moyenne mobile 3 mois', x, bottom + 9);
   }
 
+  function monthlyRateBarColor(value) {
+    if (value === null || value === undefined || !Number.isFinite(Number(value))) {
+      return [203,213,225];
+    }
+    const v = Number(value);
+    if (v < 12) return [74,222,128];
+    if (v < 18) return [163,230,53];
+    if (v < 31) return [250,204,21];
+    if (v < 43) return [251,146,60];
+    return [248,113,113];
+  }
+
   function drawMonthlyAverageRateChart(doc, x, y, w, h, rows, title) {
     doc.setFont('helvetica','bold');
     doc.setFontSize(10);
     doc.setTextColor(15,23,42);
     safeText(doc, title, x, y);
 
-    const top = y + 6, bottom = top + h - 16, left = x + 10, right = x + w;
+    const top = y + 6;
+    const bottom = top + h - 16;
+    const left = x + 8;
+    const right = x + w;
     const chartHeight = bottom - top;
     const valueToY = value => bottom - (Number(value) / 78) * chartHeight;
-    const levelBands = [
-      [0,12,[74,222,128]],
-      [12,18,[163,230,53]],
-      [18,31,[250,204,21]],
-      [31,43,[251,146,60]],
-      [43,78,[248,113,113]]
-    ];
 
-    levelBands.forEach(([min,max,color]) => {
-      const bandTop = valueToY(max);
-      const bandBottom = valueToY(min);
-      doc.setFillColor(...color);
-      doc.rect(left, bandTop, right - left, bandBottom - bandTop, 'F');
-    });
-
-    doc.setDrawColor(203,213,225);
+    doc.setDrawColor(226,232,240);
     doc.setLineWidth(0.25);
     [0,12,18,31,43,78].forEach(v => {
       const py = valueToY(v);
       doc.line(left, py, right, py);
       doc.setFont('helvetica','normal');
-      doc.setFontSize(6.5);
+      doc.setFontSize(6.2);
       doc.setTextColor(71,85,105);
       safeText(doc, v, x, py + 2);
     });
@@ -594,30 +615,35 @@
       return;
     }
 
-    const step = rows.length > 1 ? (right - left) / (rows.length - 1) : 0;
-    const points = rows.map((row,index) => ({
-      x: rows.length > 1 ? left + index * step : left + (right - left) / 2,
-      y: valueToY(row.value),
-      row
-    }));
+    const gap = 2.2;
+    const barW = (right - left - gap * (rows.length - 1)) / Math.max(1, rows.length);
 
-    doc.setDrawColor(0,0,0);
-    doc.setLineWidth(0.9);
-    for (let i = 1; i < points.length; i++) {
-      doc.line(points[i-1].x, points[i-1].y, points[i].x, points[i].y);
-    }
+    rows.forEach((row,index) => {
+      const bx = left + index * (barW + gap);
 
-    points.forEach(point => {
-      doc.setFillColor(15,23,42);
-      doc.circle(point.x, point.y, 1.3, 'F');
+      if (row.noData || row.value === null) {
+        doc.setFillColor(226,232,240);
+        doc.rect(bx, bottom - 1.2, barW, 1.2, 'F');
+      } else {
+        const by = valueToY(row.value);
+        const bh = bottom - by;
+        const color = monthlyRateBarColor(row.value);
+        doc.setFillColor(...color);
+        doc.rect(bx, by, barW, bh, 'F');
+      }
+
       doc.setFont('helvetica','bold');
-      doc.setFontSize(7);
+      doc.setFontSize(6.4);
       doc.setTextColor(15,23,42);
-      safeText(doc, point.row.displayValue, point.x, Math.max(top + 4, point.y - 2.5), { align:'center' });
+      const valueY = row.noData || row.value === null
+        ? bottom - 3
+        : Math.max(top + 4, valueToY(row.value) - 2);
+      safeText(doc, row.displayValue, bx + barW / 2, valueY, { align:'center' });
+
       doc.setFont('helvetica','normal');
-      doc.setFontSize(6.5);
+      doc.setFontSize(5.8);
       doc.setTextColor(71,85,105);
-      safeText(doc, point.row.current ? `${point.row.label}*` : point.row.label, point.x, bottom + 5, { align:'center' });
+      safeText(doc, row.current ? `${row.label}*` : row.label, bx + barW / 2, bottom + 5, { align:'center' });
     });
 
     doc.setFont('helvetica','normal');
