@@ -65,6 +65,28 @@
     return rows;
   }
 
+  function recentMonthlyTypeSeries(monthCount = 3) {
+    const now = new Date();
+    const months = [];
+    for (let offset = monthCount - 1; offset >= 0; offset--) {
+      const start = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - offset + 1, 1);
+      const source = events.filter(event => {
+        const date = eventDate(event);
+        return date && date >= start && date < end;
+      });
+      const counts = typeCounts(source);
+      months.push({
+        title: start.toLocaleDateString('fr-FR', { month:'long', year:'numeric' }),
+        rows: TYPES.map(([kind,label]) => ({
+          label: label.replace('Soirée scénario avec anal','Scénario + anal'),
+          value: counts.get(kind) || 0
+        }))
+      });
+    }
+    return months;
+  }
+
   function yearlySummary() {
     const years = [...new Set(events.map(eventYear).filter(Number.isFinite))].sort((a,b) => b - a);
     return years.map(year => {
@@ -216,13 +238,13 @@
     safeText(doc, formatDate(points.at(-1).date), right, bottom + 5, { align:'right' });
   }
 
-  function drawBarChart(doc, x, y, w, h, rows, title) {
+  function drawBarChart(doc, x, y, w, h, rows, title, sharedMax = null) {
     doc.setFont('helvetica','bold');
     doc.setFontSize(10);
     doc.setTextColor(15,23,42);
     safeText(doc, title, x, y);
     const top = y + 6, bottom = top + h - 13, left = x + 8, right = x + w;
-    const max = Math.max(1, ...rows.map(r => Number(r.value) || 0));
+    const max = Math.max(1, Number(sharedMax) || 0, ...rows.map(r => Number(r.value) || 0));
     const gap = 1.5;
     const barW = Math.max(2, (right - left - gap * Math.max(0, rows.length - 1)) / Math.max(1, rows.length));
 
@@ -345,6 +367,20 @@
       const typeRows = TYPES.map(([kind,label]) => ({ label: label.replace('Soirée scénario avec anal','Scénario + anal'), value: currentTypeCounts.get(kind) || 0 }));
       drawBarChart(doc, 14, y, 182, 60, typeRows, `Événements par type en ${currentYear}`);
       y += 67;
+
+      doc.addPage();
+      y = 18;
+      y = sectionTitle(doc, 'Répartition par type - 3 derniers mois', y);
+      const recentMonths = recentMonthlyTypeSeries(3);
+      const recentMonthsSharedMax = Math.max(
+        1,
+        ...recentMonths.flatMap(month => month.rows.map(row => Number(row.value) || 0))
+      );
+      recentMonths.forEach((month, index) => {
+        if (index > 0) y += 4;
+        drawBarChart(doc, 14, y, 182, 62, month.rows, `Événements par type - ${month.title}`, recentMonthsSharedMax);
+        y += 65;
+      });
 
       doc.addPage();
       y = 18;
