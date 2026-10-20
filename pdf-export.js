@@ -455,8 +455,66 @@
       safeText(doc, row.label, bx + barW/2, bottom + 4, { align:'center' });
       doc.setTextColor(15,23,42);
       doc.setFontSize(5.8);
-      safeText(doc, row.value, bx + barW/2, Math.max(top + 4, bottom - bh - 1.5), { align:'center' });
+      safeText(doc, row.displayValue ?? row.value, bx + barW/2, Math.max(top + 4, bottom - bh - 1.5), { align:'center' });
     });
+  }
+
+  function drawMonthlyTrendChart(doc, x, y, w, h, rows, title) {
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(10);
+    doc.setTextColor(15,23,42);
+    safeText(doc, title, x, y);
+
+    const top = y + 6, bottom = top + h - 13, left = x + 8, right = x + w;
+    const max = Math.max(1, ...rows.map(row => Math.max(Number(row.value)||0, Number(row.movingAverage)||0)));
+    const gap = 1.5;
+    const barW = Math.max(2, (right - left - gap * Math.max(0, rows.length - 1)) / Math.max(1, rows.length));
+
+    doc.setDrawColor(226,232,240);
+    doc.line(left, bottom, right, bottom);
+
+    const centers = [];
+    rows.forEach((row,index) => {
+      const value = Number(row.value) || 0;
+      const bh = (value / max) * (bottom - top);
+      const bx = left + index * (barW + gap);
+      const cx = bx + barW / 2;
+      centers.push(cx);
+
+      doc.setFillColor(147,197,253);
+      doc.rect(bx, bottom - bh, barW, bh, 'F');
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(5.2);
+      doc.setTextColor(100,116,139);
+      safeText(doc, row.label, cx, bottom + 4, { align:'center' });
+      doc.setTextColor(15,23,42);
+      safeText(doc, value, cx, Math.max(top + 4, bottom - bh - 1.5), { align:'center' });
+    });
+
+    doc.setDrawColor(15,23,42);
+    doc.setLineWidth(0.8);
+    for (let i = 1; i < rows.length; i++) {
+      const y1 = bottom - ((Number(rows[i-1].movingAverage)||0) / max) * (bottom - top);
+      const y2 = bottom - ((Number(rows[i].movingAverage)||0) / max) * (bottom - top);
+      doc.line(centers[i-1], y1, centers[i], y2);
+    }
+
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(71,85,105);
+    safeText(doc, 'Barres : événements / mois  •  Ligne : moyenne mobile 3 mois', x, bottom + 9);
+  }
+
+  function drawSummaryText(doc, textValue, y) {
+    const lines = doc.splitTextToSize(textValue, 182);
+    doc.setFillColor(248,250,252);
+    doc.setDrawColor(219,227,238);
+    doc.roundedRect(14, y, 182, 8 + lines.length * 5, 2.5, 2.5, 'FD');
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.setTextColor(51,65,85);
+    doc.text(lines, 18, y + 6);
+    return y + 12 + lines.length * 5;
   }
 
   async function exportDetailedPdf() {
