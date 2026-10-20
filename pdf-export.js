@@ -326,9 +326,13 @@
       doc.addPage();
       y = 18;
       y = sectionTitle(doc, 'Courbes et tendances', y);
+      const rate30Points = buildRatePoints(30);
+      drawLineChart(doc, 14, y, 182, 62, rate30Points, 'Évolution du taux sur les 30 derniers jours', 0, 78);
+      y += 68;
       const ratePoints = buildRatePoints(90);
       drawLineChart(doc, 14, y, 182, 62, ratePoints, 'Évolution du taux sur les 90 derniers jours', 0, 78);
       y += 68;
+      y = ensureSpace(doc, y, 70);
       const currentYearRatePoints = buildCurrentYearRatePoints();
       drawLineChart(doc, 14, y, 182, 62, currentYearRatePoints, `Évolution du taux sur l’année en cours - ${currentYear}`, 0, 78);
       y += 68;
