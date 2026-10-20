@@ -557,7 +557,7 @@
     doc.setTextColor(15,23,42);
     safeText(doc, title, x, y);
 
-    const top = y + 6, bottom = top + h - 13, left = x + 10, right = x + w;
+    const top = y + 6, bottom = top + h - 16, left = x + 10, right = x + w;
     const chartHeight = bottom - top;
     const valueToY = value => bottom - (Number(value) / 78) * chartHeight;
     const levelBands = [
@@ -623,7 +623,7 @@
     doc.setFont('helvetica','normal');
     doc.setFontSize(6.5);
     doc.setTextColor(100,116,139);
-    safeText(doc, '* mois en cours : moyenne calculée jusqu’à la date d’export', x, bottom + 10);
+    safeText(doc, '* mois en cours : moyenne calculée jusqu’à la date d’export', x, bottom + 8);
   }
 
   function drawZoneChart(doc, x, y, w, h, rows, title) {
@@ -799,8 +799,10 @@
       const currentYearRatePoints = buildCurrentYearRatePoints();
       drawLineChart(doc, 14, y, 182, 62, currentYearRatePoints, `Évolution du taux sur l’année en cours - ${currentYear}`, 0, 78);
       y += 68;
-      drawMonthlyAverageRateChart(doc, 14, y, 182, 62, monthlyAverageRates, `Taux moyen mensuel - ${currentYear}`);
-      y += 68;
+      y = ensureSpace(doc, y, 78);
+      drawMonthlyAverageRateChart(doc, 14, y, 182, 56, monthlyAverageRates, `Taux moyen mensuel - ${currentYear}`);
+      y += 62;
+      y = ensureSpace(doc, y, 72);
       drawMonthlyTrendChart(doc, 14, y, 182, 60, monthlyTrend, 'Fréquence mensuelle des événements - 12 derniers mois');
       y += 66;
 
