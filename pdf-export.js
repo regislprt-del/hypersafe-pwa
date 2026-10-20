@@ -703,6 +703,88 @@
 
       doc.addPage();
       y = 18;
+      y = sectionTitle(doc, 'Comparaison détaillée des 3 derniers mois', y);
+      const monthHeaders = monthComparison.map(month => month.label);
+      const monthComparisonRows = TYPES.map(([kind,label]) => {
+        const values = monthComparison.map(month => month.counts.get(kind) || 0);
+        return [
+          label,
+          ...values,
+          percentChange(values.at(-1) || 0, values[0] || 0)
+        ];
+      });
+      doc.autoTable({
+        startY:y,
+        head:[['Type', ...monthHeaders, 'Évolution']],
+        body:monthComparisonRows,
+        theme:'grid',
+        styles:{ font:'helvetica', fontSize:7.5, cellPadding:2 },
+        headStyles:{ fillColor:[15,23,42], textColor:[255,255,255] },
+        alternateRowStyles:{ fillColor:[248,250,252] },
+        margin:{ left:14,right:14 }
+      });
+
+      doc.addPage();
+      y = 18;
+      y = sectionTitle(doc, 'Habitudes temporelles', y);
+      drawBarChart(doc, 14, y, 182, 58, weekdayYear, `Moyenne d’événements par jour de la semaine - ${currentYear}`);
+      y += 64;
+      drawBarChart(doc, 14, y, 182, 58, timeBandsYear, `Répartition par tranche horaire - ${currentYear}`);
+      y += 66;
+      drawMetricCard(doc, 14, y, 42, 'Jours sans événement', daysWithout7, 'sur les 7 derniers jours');
+      drawMetricCard(doc, 59, y, 42, 'Jours sans événement', daysWithout30, 'sur les 30 derniers jours');
+      drawMetricCard(doc, 104, y, 42, 'Jours sans événement', daysWithoutYear, `depuis le 1er janvier ${currentYear}`);
+      drawMetricCard(doc, 149, y, 47, 'Plus longue période', longestWithoutYear, 'jours consécutifs sans événement');
+      y += 31;
+      drawMetricCard(doc, 14, y, 86, 'Intervalle moyen entre événements', interval30 === null ? '—' : `${interval30.toLocaleString('fr-FR',{maximumFractionDigits:1})} j`, '30 derniers jours');
+      drawMetricCard(doc, 104, y, 92, 'Intervalle moyen précédent', previousInterval30 === null ? '—' : `${previousInterval30.toLocaleString('fr-FR',{maximumFractionDigits:1})} j`, '30 jours précédents');
+
+      doc.addPage();
+      y = 18;
+      y = sectionTitle(doc, `Impact et répartition par type - ${currentYear}`, y);
+      drawBarChart(doc, 14, y, 182, 68, impactYear, 'Impact cumulé par type (points retirés)');
+      y += 74;
+      drawBarChart(doc, 14, y, 182, 68, percentageYear, 'Part de chaque type dans le total des événements');
+      y += 74;
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(100,116,139);
+      safeText(doc, 'L’impact cumulé mesure la somme des impacts enregistrés ; la répartition indique la part de chaque type dans le nombre total d’événements.', 14, y);
+
+      doc.addPage();
+      y = 18;
+      y = sectionTitle(doc, 'Analyse du taux', y);
+      doc.autoTable({
+        startY:y,
+        head:[['Période','Taux moyen','Minimum','Maximum','Variabilité']],
+        body:[
+          ['7 derniers jours', rateStats7.average === null ? '—' : fmt(rateStats7.average), rateStats7.min === null ? '—' : fmt(rateStats7.min), rateStats7.max === null ? '—' : fmt(rateStats7.max), rateStats7.stddev === null ? '—' : fmt(rateStats7.stddev)],
+          ['30 derniers jours', rateStats30.average === null ? '—' : fmt(rateStats30.average), rateStats30.min === null ? '—' : fmt(rateStats30.min), rateStats30.max === null ? '—' : fmt(rateStats30.max), rateStats30.stddev === null ? '—' : fmt(rateStats30.stddev)],
+          [`Année ${currentYear}`, rateStatsYear.average === null ? '—' : fmt(rateStatsYear.average), rateStatsYear.min === null ? '—' : fmt(rateStatsYear.min), rateStatsYear.max === null ? '—' : fmt(rateStatsYear.max), rateStatsYear.stddev === null ? '—' : fmt(rateStatsYear.stddev)]
+        ],
+        theme:'grid',
+        styles:{ font:'helvetica', fontSize:7.5, cellPadding:2 },
+        headStyles:{ fillColor:[15,23,42], textColor:[255,255,255] },
+        alternateRowStyles:{ fillColor:[248,250,252] },
+        margin:{ left:14,right:14 }
+      });
+      y = doc.lastAutoTable.finalY + 10;
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(100,116,139);
+      safeText(doc, 'Variabilité = écart-type du taux : plus la valeur est élevée, plus le taux fluctue.', 14, y);
+      y += 8;
+      drawZoneChart(doc, 14, y, 182, 58, rateStats30.zones, 'Temps estimé dans chaque zone - 30 derniers jours');
+      y += 64;
+      drawZoneChart(doc, 14, y, 182, 58, rateStatsYear.zones, `Temps estimé dans chaque zone - année ${currentYear}`);
+      y += 64;
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(100,116,139);
+      safeText(doc, 'Les pourcentages de temps par zone sont estimés à partir d’échantillons réguliers du taux et des événements enregistrés.', 14, y);
+
+      doc.addPage();
+      y = 18;
       y = sectionTitle(doc, 'Statistiques détaillées par type', y);
       const totalTypeCounts = typeCounts(events);
       const last30TypeCounts = typeCounts(last30);
