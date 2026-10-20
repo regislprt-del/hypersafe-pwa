@@ -92,10 +92,27 @@
     return years.map(year => {
       const source = events.filter(event => eventYear(event) === year);
       const top = topType(source);
+
+      let averageSource = source;
+      let averageMonths = 12;
+      let averageBasis = '12 mois';
+
+      if (year === 2026) {
+        const averageStart = new Date(2026, 8, 1);
+        const averageEnd = new Date(2027, 0, 1);
+        averageSource = source.filter(event => {
+          const date = eventDate(event);
+          return date && date >= averageStart && date < averageEnd;
+        });
+        averageMonths = 4;
+        averageBasis = 'sept.–déc. (4 mois)';
+      }
+
       return {
         year,
         total: source.length,
-        average: source.length / 12,
+        average: averageSource.length / averageMonths,
+        averageBasis,
         top: top ? `${top.label} (${top.count})` : '—'
       };
     });
@@ -813,15 +830,20 @@
       const annual = yearlySummary();
       doc.autoTable({
         startY:y,
-        head:[['Année','Événements','Moyenne / mois','Type le plus fréquent']],
-        body:annual.map(row => [String(row.year), row.total, fmt(row.average), row.top]),
+        head:[['Année','Événements','Moyenne / mois','Base de calcul','Type le plus fréquent']],
+        body:annual.map(row => [String(row.year), row.total, fmt(row.average), row.averageBasis, row.top]),
         theme:'grid',
-        styles:{ font:'helvetica', fontSize:7.5, cellPadding:2 },
+        styles:{ font:'helvetica', fontSize:7.2, cellPadding:2 },
         headStyles:{ fillColor:[15,23,42], textColor:[255,255,255] },
         alternateRowStyles:{ fillColor:[248,250,252] },
         margin:{ left:14,right:14 }
       });
-      y = doc.lastAutoTable.finalY + 10;
+      y = doc.lastAutoTable.finalY + 6;
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(100,116,139);
+      safeText(doc, 'Pour 2026, la moyenne mensuelle est calculée uniquement sur septembre à décembre (4 mois), l’application ayant été créée le 29 août.', 14, y);
+      y += 10;
 
       y = sectionTitle(doc, 'Données mensuelles - année en cours', ensureSpace(doc, y, 50));
       const monthlyCurrentYear = MONTHS_FR.map((label, month) => {
