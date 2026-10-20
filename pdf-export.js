@@ -553,14 +553,36 @@
 
       const currentYear = now.getFullYear();
       const previousYear = currentYear - 1;
+      const yearStart = new Date(currentYear, 0, 1);
+      const calendarEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      const calendarStart7 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+      const calendarStart30 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
       const currentYearEvents = events.filter(event => eventYear(event) === currentYear);
       const previousYearEvents = events.filter(event => eventYear(event) === previousYear);
+      const previous30Events = eventsBetween(start60, start30);
 
       const thisMonthStart = new Date(currentYear, now.getMonth(), 1);
       const nextMonthStart = new Date(currentYear, now.getMonth() + 1, 1);
       const previousMonthStart = new Date(currentYear, now.getMonth() - 1, 1);
       const thisMonth = countBetween(thisMonthStart, nextMonthStart);
       const previousMonth = countBetween(previousMonthStart, thisMonthStart);
+
+      const daysWithout7 = daysWithoutEvents(calendarStart7, calendarEnd);
+      const daysWithout30 = daysWithoutEvents(calendarStart30, calendarEnd);
+      const daysWithoutYear = daysWithoutEvents(yearStart, calendarEnd);
+      const longestWithoutYear = longestNoEventStreak(yearStart, calendarEnd);
+      const interval30 = averageIntervalDays(last30);
+      const previousInterval30 = averageIntervalDays(previous30Events);
+
+      const rateStats7 = rateStatistics(start7, now, 2);
+      const rateStats30 = rateStatistics(start30, now, 3);
+      const rateStatsYear = rateStatistics(yearStart, now, 6);
+      const weekdayYear = weekdayAverageSeries(yearStart, now);
+      const timeBandsYear = timeBandSeries(yearStart, now);
+      const impactYear = cumulativeImpactByType(currentYearEvents);
+      const percentageYear = typePercentageSeries(currentYearEvents);
+      const monthComparison = recentMonthComparisonData(3);
+      const monthlyTrend = monthlyTrendSeries(12);
 
       doc.setProperties({
         title: 'HyperSafe - Rapport détaillé',
@@ -597,6 +619,16 @@
       drawMetricCard(doc, 132, y, 64, '30 derniers j. vs 30 précédents', percentChange(count30, previous30), `${count30} vs ${previous30}`);
       y += 31;
 
+      y = sectionTitle(doc, 'Résumé automatique', y);
+      const summaryParts = [
+        `Sur les 30 derniers jours, ${count30} événement${count30 > 1 ? 's ont' : ' a'} été enregistré${count30 > 1 ? 's' : ''}, soit ${percentChange(count30, previous30)} par rapport aux 30 jours précédents.`,
+        top30 ? `Le type le plus fréquent est « ${top30.label} » avec ${top30.count} occurrence${top30.count > 1 ? 's' : ''}.` : 'Aucun type dominant n’est identifié sur cette période.',
+        `La moyenne quotidienne est de ${fmt(dailyAverage)} événement et la moyenne hebdomadaire de ${fmt(weeklyAverage)}.`,
+        rateStats30.average === null ? '' : `Le taux moyen est de ${fmt(rateStats30.average)}, avec un minimum de ${fmt(rateStats30.min)} et un maximum de ${fmt(rateStats30.max)}.`,
+        interval30 === null ? '' : `L’intervalle moyen entre deux événements est de ${interval30.toLocaleString('fr-FR',{maximumFractionDigits:1})} jour${interval30 >= 2 ? 's' : ''}.`
+      ].filter(Boolean).join(' ');
+      y = drawSummaryText(doc, summaryParts, y);
+
       doc.addPage();
       y = 18;
       y = sectionTitle(doc, 'Courbes et tendances', y);
@@ -610,8 +642,8 @@
       const currentYearRatePoints = buildCurrentYearRatePoints();
       drawLineChart(doc, 14, y, 182, 62, currentYearRatePoints, `Évolution du taux sur l’année en cours - ${currentYear}`, 0, 78);
       y += 68;
-      drawBarChart(doc, 14, y, 182, 56, monthlySeries(12), 'Nombre d’événements par mois - 12 derniers mois');
-      y += 62;
+      drawMonthlyTrendChart(doc, 14, y, 182, 60, monthlyTrend, 'Fréquence mensuelle des événements - 12 derniers mois');
+      y += 66;
 
       y = ensureSpace(doc, y, 72);
       y = sectionTitle(doc, `Répartition par type - ${currentYear}`, y);
