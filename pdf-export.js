@@ -51,31 +51,6 @@
     return winner;
   }
 
-  function computeEventRates() {
-    const result = new Map();
-    const sortedEvents = [...events].sort((a,b) => new Date(a.occurred_at) - new Date(b.occurred_at));
-    const sortedAnchors = [...anchors].sort((a,b) => new Date(a.anchor_at) - new Date(b.anchor_at));
-    let ai = 0, value = null, cursor = null;
-
-    for (const event of sortedEvents) {
-      const eventTime = new Date(event.occurred_at);
-      while (ai < sortedAnchors.length && new Date(sortedAnchors[ai].anchor_at) <= eventTime) {
-        value = clamp(Number(sortedAnchors[ai].score));
-        cursor = new Date(sortedAnchors[ai].anchor_at);
-        ai++;
-      }
-      if (value === null || !cursor) {
-        result.set(event.id, null);
-        continue;
-      }
-      value = clamp(value + Math.max(0, Math.floor((eventTime - cursor) / 3600000)));
-      value = clamp(value - Number(event.impact || 0));
-      cursor = eventTime;
-      result.set(event.id, value);
-    }
-    return result;
-  }
-
   function monthlySeries(monthCount = 12) {
     const now = new Date();
     const rows = [];
@@ -276,7 +251,7 @@
 
       doc.setProperties({
         title: 'HyperSafe - Rapport détaillé',
-        subject: 'Export complet des statistiques et de l’historique HyperSafe',
+        subject: 'Export complet des statistiques HyperSafe',
         author: 'HyperSafe'
       });
 
@@ -403,37 +378,6 @@
         margin:{ left:14,right:14 }
       });
       y = doc.lastAutoTable.finalY + 10;
-
-      y = sectionTitle(doc, 'Historique complet des événements', ensureSpace(doc, y, 28));
-      const rateMap = computeEventRates();
-      const detailRows = [...events]
-        .sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at))
-        .map(event => [
-          formatDate(eventDate(event), true),
-          typeInfo(event.kind)?.[1] || event.kind,
-          event.slot_no ?? '—',
-          Number(event.impact || 0).toLocaleString('fr-FR'),
-          rateMap.get(event.id) === null || rateMap.get(event.id) === undefined ? '—' : fmt(rateMap.get(event.id)),
-          event.created_by === session?.user?.id ? 'Vous' : 'Autre compte'
-        ]);
-      doc.autoTable({
-        startY:y,
-        head:[['Date / heure','Type','N°','Impact','Taux après','Saisi par']],
-        body:detailRows.length ? detailRows : [['—','Aucun événement','—','—','—','—']],
-        theme:'grid',
-        styles:{ font:'helvetica', fontSize:6.8, cellPadding:1.7, overflow:'linebreak' },
-        headStyles:{ fillColor:[15,23,42], textColor:[255,255,255] },
-        alternateRowStyles:{ fillColor:[248,250,252] },
-        columnStyles:{ 0:{cellWidth:29}, 1:{cellWidth:55}, 2:{cellWidth:10}, 3:{cellWidth:18}, 4:{cellWidth:22}, 5:{cellWidth:26} },
-        margin:{ left:14,right:14 },
-        didDrawPage: data => {
-          if (data.pageNumber > 1) {
-            doc.setFont('helvetica','normal');
-            doc.setFontSize(7);
-            doc.setTextColor(100,116,139);
-          }
-        }
-      });
 
       const pages = doc.getNumberOfPages();
       for (let page = 1; page <= pages; page++) {
