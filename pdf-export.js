@@ -101,6 +101,200 @@
     });
   }
 
+  function eventsBetween(start, end) {
+    const a = start.getTime(), b = end.getTime();
+    return events.filter(event => {
+      const date = eventDate(event);
+      return date && date.getTime() >= a && date.getTime() < b;
+    });
+  }
+
+  function dayKey(date) {
+    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+  }
+
+  function calendarDayStarts(start, end) {
+    const rows = [];
+    const cursor = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const limit = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    while (cursor <= limit) {
+      rows.push(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return rows;
+  }
+
+  function daysWithoutEvents(start, end) {
+    const source = eventsBetween(start, end);
+    const active = new Set(source.map(event => {
+      const date = eventDate(event);
+      return date ? dayKey(date) : null;
+    }).filter(Boolean));
+    return calendarDayStarts(start, new Date(end.getTime() - 1)).filter(date => !active.has(dayKey(date))).length;
+  }
+
+  function longestNoEventStreak(start, end) {
+    const source = eventsBetween(start, end);
+    const active = new Set(source.map(event => {
+      const date = eventDate(event);
+      return date ? dayKey(date) : null;
+    }).filter(Boolean));
+    let longest = 0, current = 0;
+    for (const date of calendarDayStarts(start, new Date(end.getTime() - 1))) {
+      if (active.has(dayKey(date))) current = 0;
+      else {
+        current += 1;
+        if (current > longest) longest = current;
+      }
+    }
+    return longest;
+  }
+
+  function averageIntervalDays(source) {
+    const sorted = source.map(eventDate).filter(Boolean).sort((a,b) => a - b);
+    if (sorted.length < 2) return null;
+    let total = 0;
+    for (let i = 1; i < sorted.length; i++) total += sorted[i] - sorted[i-1];
+    return total / (sorted.length - 1) / DAY_MS;
+  }
+
+  function weekdayAverageSeries(start, end) {
+    const labels = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+    const occurrences = Array(7).fill(0);
+    for (const date of calendarDayStarts(start, new Date(end.getTime() - 1))) {
+      occurrences[(date.getDay() + 6) % 7] += 1;
+    }
+    const counts = Array(7).fill(0);
+    eventsBetween(start, end).forEach(event => {
+      const date = eventDate(event);
+      if (date) counts[(date.getDay() + 6) % 7] += 1;
+    });
+    return labels.map((label,index) => ({
+      label,
+      value: occurrences[index] ? Math.round((counts[index] / occurrences[index]) * 100) / 100 : 0,
+      displayValue: occurrences[index] ? (counts[index] / occurrences[index]).toLocaleString('fr-FR',{maximumFractionDigits:2}) : '0'
+    }));
+  }
+
+  function timeBandSeries(start, end) {
+    const bands = [
+      { label:'00h–06h', min:0, max:6 },
+      { label:'06h–12h', min:6, max:12 },
+      { label:'12h–18h', min:12, max:18 },
+      { label:'18h–00h', min:18, max:24 }
+    ];
+    const counts = bands.map(() => 0);
+    eventsBetween(start, end).forEach(event => {
+      const date = eventDate(event);
+      if (!date) return;
+      const hour = date.getHours();
+      const index = bands.findIndex(b => hour >= b.min && hour < b.max);
+      if (index >= 0) counts[index] += 1;
+    });
+    return bands.map((band,index) => ({ label:band.label, value:counts[index] }));
+  }
+
+  function cumulativeImpactByType(source) {
+    const rows = TYPES.map(([kind,label]) => {
+      const total = source
+        .filter(event => event.kind === kind)
+        .reduce((sum,event) => sum + Number(event.impact || 0), 0);
+      return { label:label.replace('Soirée scénario avec anal','Scénario + anal'), value:Math.round(total * 10) / 10 };
+    });
+    return rows;
+  }
+
+  function typePercentageSeries(source) {
+    const counts = typeCounts(source);
+    const total = Math.max(1, source.length);
+    return TYPES.map(([kind,label]) => {
+      const percentage = (counts.get(kind) || 0) * 100 / total;
+      return {
+        label:label.replace('Soirée scénario avec anal','Scénario + anal'),
+        value:Math.round(percentage * 10) / 10,
+        displayValue:`${percentage.toLocaleString('fr-FR',{maximumFractionDigits:1})}%`
+      };
+    });
+  }
+
+  function rateStatistics(start, end, stepHours = 3) {
+    if (!anchors.length) return { average:null, min:null, max:null, stddev:null, zones:[] };
+    const earliest = new Date(anchors[0].anchor_at);
+    const actualStart = start < earliest ? earliest : start;
+    if (actualStart >= end) return { average:null, min:null, max:null, stddev:null, zones:[] };
+
+    const sampleDates = [];
+    const step = stepHours * 3600000;
+    for (let t = actualStart.getTime(); t < end.getTime(); t += step) sampleDates.push(new Date(t));
+    eventsBetween(actualStart, end).forEach(event => {
+      const date = eventDate(event);
+      if (date) sampleDates.push(date);
+    });
+    anchors.forEach(anchor => {
+      const date = new Date(anchor.anchor_at);
+      if (date >= actualStart && date < end) sampleDates.push(date);
+    });
+    sampleDates.push(new Date(end.getTime() - 1));
+
+    const values = sampleDates
+      .map(date => rateAt(date))
+      .filter(value => value !== null && Number.isFinite(Number(value)))
+      .map(Number);
+
+    if (!values.length) return { average:null, min:null, max:null, stddev:null, zones:[] };
+
+    const average = values.reduce((sum,value) => sum + value, 0) / values.length;
+    const variance = values.reduce((sum,value) => sum + Math.pow(value - average, 2), 0) / values.length;
+    const zones = [
+      { label:'0–12', min:0, max:12 },
+      { label:'12–18', min:12, max:18 },
+      { label:'18–31', min:18, max:31 },
+      { label:'31–43', min:31, max:43 },
+      { label:'43–78', min:43, max:78.0001 }
+    ].map(zone => {
+      const count = values.filter(value => value >= zone.min && value < zone.max).length;
+      const pct = count * 100 / values.length;
+      return {
+        label:zone.label,
+        value:Math.round(pct * 10) / 10,
+        displayValue:`${pct.toLocaleString('fr-FR',{maximumFractionDigits:1})}%`
+      };
+    });
+
+    return {
+      average,
+      min:Math.min(...values),
+      max:Math.max(...values),
+      stddev:Math.sqrt(variance),
+      zones
+    };
+  }
+
+  function monthlyTrendSeries(monthCount = 12) {
+    const base = monthlySeries(monthCount);
+    return base.map((row,index) => {
+      const start = Math.max(0, index - 2);
+      const sample = base.slice(start, index + 1);
+      const movingAverage = sample.reduce((sum,item) => sum + Number(item.value || 0), 0) / sample.length;
+      return { ...row, movingAverage:Math.round(movingAverage * 100) / 100 };
+    });
+  }
+
+  function recentMonthComparisonData(monthCount = 3) {
+    const now = new Date();
+    const months = [];
+    for (let offset = monthCount - 1; offset >= 0; offset--) {
+      const start = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - offset + 1, 1);
+      const counts = typeCounts(eventsBetween(start,end));
+      months.push({
+        label:start.toLocaleDateString('fr-FR',{month:'short',year:'numeric'}),
+        counts
+      });
+    }
+    return months;
+  }
+
   function buildRatePoints(days = 90) {
     if (!anchors.length) return [];
     const now = new Date();
