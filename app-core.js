@@ -13,6 +13,21 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const clamp=n=>Math.max(0,Math.min(78,n));
 const status=n=>THRESHOLDS.find(x=>n<=x.max)||THRESHOLDS.at(-1);
 const fmt=n=>(Math.round(Number(n)*10)/10).toLocaleString('fr-FR',{maximumFractionDigits:1});
+const fmtHours=(n)=>{
+  const value=Number(n);if(!Number.isFinite(value))return '—';
+  const sign=value<0?'−':'';
+  const totalMinutes=Math.round(Math.abs(value)*60);
+  if(totalMinutes===0)return '0h';
+  const hours=Math.floor(totalMinutes/60),minutes=totalMinutes%60;
+  if(!hours)return `${sign}${minutes}min`;
+  if(!minutes)return `${sign}${hours}h`;
+  return `${sign}${hours}h${String(minutes).padStart(2,'0')}`;
+};
+const fmtHoursSigned=(n)=>{
+  const value=Number(n);if(!Number.isFinite(value))return '—';
+  if(Math.abs(value)<1/120)return '0h';
+  return `${value>0?'+':''}${fmtHours(value)}`;
+};
 const localDay=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const typeInfo=k=>TYPES.find(x=>x[0]===k);
 function toast(message){const t=$('#toast');t.textContent=message;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),3200)}
