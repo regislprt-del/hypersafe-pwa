@@ -24,7 +24,7 @@
 
   function updateDisplayedValue() {
     const value = document.getElementById('manualAdjustValue');
-    if (value && typeof currentRate === 'function' && typeof fmt === 'function') value.textContent = fmt(currentRate());
+    if (value && typeof currentRate === 'function' && typeof fmtHours === 'function') value.textContent = fmtHours(currentRate());
   }
 
   async function adjust(delta) {
@@ -48,7 +48,7 @@
       if (data?.id && typeof window.notifyPartnerOfChange === 'function') window.notifyPartnerOfChange('anchors', data.id);
       renderAll();
       updateDisplayedValue();
-      toast(`Niveau psychologique ${delta > 0 ? '+1' : '−1'} → ${fmt(next)}`);
+      toast(`Niveau ${delta > 0 ? '+1h' : '−1h'} → ${fmtHours(next)}`);
     } catch (e) {
       toast(e.message || 'Impossible de modifier le niveau.');
     } finally {
@@ -65,7 +65,7 @@
     const row = document.createElement('div');
     row.id = 'manualAdjustCard';
     row.className = 'setting-row';
-    row.innerHTML = `<div class="manual-adjust-card"><h3>Ajustement manuel du niveau</h3><p>Permet de corriger manuellement le niveau de −1 ou +1.</p><div class="manual-adjust-actions"><button id="manualMinus" class="manual-adjust-btn manual-minus" type="button">−1</button><button id="manualPlus" class="manual-adjust-btn manual-plus" type="button">+1</button></div><div class="manual-adjust-current">Niveau actuel : <strong id="manualAdjustValue">—</strong></div></div>`;
+    row.innerHTML = `<div class="manual-adjust-card"><h3>Ajustement manuel du niveau</h3><p>Permet de corriger manuellement le niveau de −1h ou +1h.</p><div class="manual-adjust-actions"><button id="manualMinus" class="manual-adjust-btn manual-minus" type="button">−1h</button><button id="manualPlus" class="manual-adjust-btn manual-plus" type="button">+1h</button></div><div class="manual-adjust-current">Niveau actuel : <strong id="manualAdjustValue">—</strong></div></div>`;
     settingsContent.prepend(row);
     document.getElementById('manualMinus').addEventListener('click', () => adjust(-1));
     document.getElementById('manualPlus').addEventListener('click', () => adjust(1));
