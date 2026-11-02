@@ -17,8 +17,80 @@ async function toggleSlot(kind, slot) {
   renderAll();
 }
 async function setAnchor() { let value=Number($('#anchorValue').value); if(!Number.isFinite(value))return; value=clamp(value); const {data,error}=await sb.from('anchors').insert({couple_id:profile.couple_id,score:value,created_by:session.user.id}).select().single(); if(error)return toast(error.message); if(data&&!anchors.some(a=>a.id===data.id)){anchors.push(data);anchors.sort((a,b)=>new Date(a.anchor_at)-new Date(b.anchor_at));} if(data?.id&&typeof window.notifyPartnerOfChange==='function')window.notifyPartnerOfChange('anchors',data.id); renderAll();toast('Nouvelle référence enregistrée'); }
+function rateTierNumber(rate){return Math.max(1,THRESHOLDS.findIndex(x=>rate<=x.max)+1)}
+function averageRateOverDays(days=7,now=new Date()){
+  if(!anchors.length)return null;
+  const earliest=new Date(anchors[0].anchor_at);
+  const requested=new Date(now.getTime()-days*86400000);
+  const start=requested<earliest?earliest:requested;
+  if(start>=now)return currentRate(now);
+  const values=[];
+  for(let t=start.getTime();t<now.getTime();t+=3600000){const value=rateAt(new Date(t));if(value!==null)values.push(Number(value))}
+  const current=currentRate(now);if(Number.isFinite(current))values.push(current);
+  return values.length?values.reduce((sum,value)=>sum+value,0)/values.length:null;
+}
+function formatElapsedSince(date,now=new Date()){
+  if(!(date instanceof Date)||Number.isNaN(date.getTime()))return '—';
+  const minutes=Math.max(0,Math.floor((now-date)/60000));
+  if(minutes<1)return "à l’instant";
+  if(minutes<60)return `il y a ${minutes} min`;
+  const hours=Math.floor(minutes/60);
+  if(hours<24)return `il y a ${hours}h`;
+  const days=Math.floor(hours/24);
+  return `il y a ${days}j`;
+}
+function renderHomeMetrics(now=new Date(),rate=currentRate(now)){
+  const average=averageRateOverDays(7,now);
+  const averageEl=$('#homeAverage7'),deltaEl=$('#homeAverageDelta'),deltaCard=$('#homeDeltaCard');
+  if(averageEl)averageEl.textContent=average===null?'—':fmt(average);
+  if(deltaEl&&deltaCard){
+    deltaCard.classList.remove('delta-up','delta-down','delta-stable');
+    if(average===null){deltaEl.textContent='—';deltaCard.classList.add('delta-stable')}
+    else{
+      const delta=Math.round((rate-average)*10)/10;
+      deltaEl.textContent=`${delta>0?'+':''}${fmt(delta)}`;
+      deltaCard.classList.add(delta>0.05?'delta-up':delta<-0.05?'delta-down':'delta-stable');
+    }
+  }
+  const validEvents=events.filter(e=>new Date(e.occurred_at)<=now).sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at));
+  const latest=validEvents[0],lastEl=$('#homeLastReport'),lastDetail=$('#homeLastReportDetail');
+  if(lastEl)lastEl.textContent=latest?formatElapsedSince(new Date(latest.occurred_at),now):'—';
+  if(lastDetail)lastDetail.textContent=latest?new Date(latest.occurred_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'aucun rapport enregistré';
+}
 function renderAll(){renderRate();renderSlots();renderRecent();renderHistory();renderChart();$('#coupleCode').textContent=couple?.join_code||'—';$('#anchorValue').value=fmt(currentRate());$('#todayLabel').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'});}
-function renderRate(){const now=new Date(),r=currentRate(now),s=status(r);$('#currentRate').textContent=fmt(r);$('#statusText').textContent='';$('#statusText').style.display='none';const rateCard=$('#rateCard');const rateColor=r<=12?'#4ade80':r<=18?'#a3e635':r<=31?'#facc15':r<=43?'#fb923c':'#f87171';rateCard.style.background=rateColor;rateCard.style.borderColor=rateColor;rateCard.style.color='#0f172a';const past=new Date(now.getTime()-72*3600000),pastRate=rateAt(past),arrow=$('#trendArrow'),label=$('#trendLabel'),value=$('#trendValue');if(!arrow||!label||!value)return;if(pastRate===null){arrow.textContent='→';label.textContent='Stable';value.textContent='';value.style.display='none';return;}value.style.display='';const delta=Math.round((r-pastRate)*10)/10,abs=Math.abs(delta);if(delta>0.05){arrow.textContent='↗';label.textContent='Hausse';arrow.className='trend-up';label.className='trend-up';}else if(delta<-0.05){arrow.textContent='↘';label.textContent='Baisse';arrow.className='trend-down';label.className='trend-down';}else{arrow.textContent='→';label.textContent='Stable';arrow.className='trend-stable';label.className='trend-stable';}value.textContent=`${delta>0?'+':''}${fmt(delta)} ${abs===1?'point':'points'}`;}
+function renderRate(){
+  const now=new Date(),r=currentRate(now),s=status(r),tier=rateTierNumber(r);
+  $('#currentRate').textContent=fmt(r);
+  const rateCard=$('#rateCard');
+  const rateColor=r<=12?'#4ade80':r<=18?'#a3e635':r<=31?'#facc15':r<=43?'#fb923c':'#f87171';
+  rateCard.style.background=rateColor;rateCard.style.borderColor=rateColor;rateCard.style.color='#0f172a';
+  const tierText=$('#rateTierText'),nextText=$('#rateNextText');
+  if(tierText)tierText.textContent=`Palier ${tier} • ${s.label}`;
+  if(nextText){
+    if(r>=78)nextText.textContent='Taux maximum atteint';
+    else{
+      const nextTier=Math.min(5,tier+1);
+      const boundary=THRESHOLDS[tier-1]?.max??78;
+      if(tier>=5){
+        const remaining=Math.max(0,Math.round((78-r)*10)/10);
+        nextText.textContent=`${fmt(remaining)} ${remaining===1?'point':'points'} avant le maximum`;
+      }else{
+        const remaining=Math.max(0,Math.round((boundary-r)*10)/10);
+        nextText.textContent=`Palier ${nextTier} après ${boundary} • ${fmt(remaining)} ${remaining===1?'point':'points'} avant le seuil`;
+      }
+    }
+  }
+  renderHomeMetrics(now,r);
+  const past=new Date(now.getTime()-72*3600000),pastRate=rateAt(past),arrow=$('#trendArrow'),label=$('#trendLabel'),value=$('#trendValue');
+  if(!arrow||!label||!value)return;
+  if(pastRate===null){arrow.textContent='→';label.textContent='Stable';value.textContent='';value.style.display='none';return;}
+  value.style.display='';
+  const delta=Math.round((r-pastRate)*10)/10,abs=Math.abs(delta);
+  if(delta>0.05){arrow.textContent='↗';label.textContent='Hausse';arrow.className='trend-up';label.className='trend-up';}
+  else if(delta<-0.05){arrow.textContent='↘';label.textContent='Baisse';arrow.className='trend-down';label.className='trend-down';}
+  else{arrow.textContent='→';label.textContent='Stable';arrow.className='trend-stable';label.className='trend-stable';}
+  value.textContent=`${delta>0?'+':''}${fmt(delta)} ${abs===1?'point':'points'}`;
+}
 function renderSlots(){const grid=$('#eventGrid');grid.innerHTML='';const day=localDay();for(const[kind,name]of TYPES){const row=document.createElement('div');row.className='event-row';row.innerHTML=`<div class="event-name">${name}</div>`;for(let i=1;i<=3;i++){const e=events.find(x=>x.event_day===day&&x.kind===kind&&x.slot_no===i);const b=document.createElement('button');b.className='slot'+(e?' active':'');b.innerHTML=e?`✓ +1<span class="slot-time">${new Date(e.occurred_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span>`:'+1';b.onclick=()=>toggleSlot(kind,i);row.appendChild(b);}grid.appendChild(row);}}
 function renderRecent(){const arr=[...events].sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at)).slice(0,12);$('#recentBody').innerHTML=arr.map(e=>`<tr><td>${new Date(e.occurred_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</td><td>${typeInfo(e.kind)?.[1]||e.kind}</td><td>${fmt(resultRateForEvent(e))}</td></tr>`).join('')||'<tr><td colspan="3">Aucun événement</td></tr>';}
 function renderHistory(){const q=$('#historySearch').value.trim().toLowerCase();let arr=[...events].sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at));if(q)arr=arr.filter(e=>(typeInfo(e.kind)?.[1]||'').toLowerCase().includes(q));arr=arr.slice(0,historyLimit);$('#fullHistory').innerHTML=arr.map(e=>`<div class="history-item"><span>${new Date(e.occurred_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</span><strong>${typeInfo(e.kind)?.[1]||e.kind}</strong><span class="rate">${fmt(resultRateForEvent(e))}</span></div>`).join('')||'<p class="muted">Aucun résultat.</p>';}
