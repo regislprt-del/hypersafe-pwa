@@ -49,14 +49,14 @@
 
     if (!anchors.length || anchorFor(now) === null) {
       applyRateZoneStyle(target, null);
-      target.innerHTML = '<span class="time-to-78-label">Temps restant avant le taux maximum</span><span class="time-to-78-value">—</span>';
+      target.innerHTML = '<span class="time-to-78-label">Temps restant avant le maximum (78h)</span><span class="time-to-78-value">—</span>';
       return;
     }
 
     applyRateZoneStyle(target, rate);
 
     if (rate >= 78) {
-      target.innerHTML = '<span class="time-to-78-label">Taux 78 atteint</span>';
+      target.innerHTML = '<span class="time-to-78-label">Maximum 78h atteint</span>';
       return;
     }
 
@@ -80,7 +80,7 @@
     const targetAt = nextIncrementAt + (incrementsNeeded - 1) * 3600000;
     const remaining = Math.max(0, targetAt - now.getTime());
 
-    target.innerHTML = `<span class="time-to-78-label">Temps restant avant le taux maximum</span><span class="time-to-78-value">${formatRemaining(remaining)}</span>`;
+    target.innerHTML = `<span class="time-to-78-label">Temps restant avant le maximum (78h)</span><span class="time-to-78-value">${formatRemaining(remaining)}</span>`;
   }
 
   function injectStyle() {
