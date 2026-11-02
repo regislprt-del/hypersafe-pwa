@@ -21,6 +21,19 @@
       : { day:'2-digit', month:'2-digit', year:'numeric' });
   }
 
+  function formatHours(value, signed = false) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return '—';
+    const totalMinutes = Math.round(Math.abs(n) * 60);
+    if (totalMinutes === 0) return '0h';
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const sign = n < 0 ? '−' : (signed && n > 0 ? '+' : '');
+    if (!hours) return `${sign}${minutes}min`;
+    if (!minutes) return `${sign}${hours}h`;
+    return `${sign}${hours}h${String(minutes).padStart(2,'0')}`;
+  }
+
   function countBetween(start, end) {
     const a = start.getTime(), b = end.getTime();
     return events.filter(event => {
@@ -216,7 +229,7 @@
       const total = source
         .filter(event => event.kind === kind)
         .reduce((sum,event) => sum + Number(event.impact || 0), 0);
-      return { label:label.replace('Soirée scénario avec anal','Scénario + anal'), value:Math.round(total * 10) / 10 };
+      return { label:label.replace('Soirée scénario avec anal','Scénario + anal'), value:Math.round(total * 10) / 10, displayValue:formatHours(total) };
     });
     return rows;
   }
@@ -263,11 +276,11 @@
     const average = values.reduce((sum,value) => sum + value, 0) / values.length;
     const variance = values.reduce((sum,value) => sum + Math.pow(value - average, 2), 0) / values.length;
     const zones = [
-      { label:'0–12', min:0, max:12 },
-      { label:'12–18', min:12, max:18 },
-      { label:'18–31', min:18, max:31 },
-      { label:'31–43', min:31, max:43 },
-      { label:'43–78', min:43, max:78.0001 }
+      { label:'0–12h', min:0, max:12 },
+      { label:'12–18h', min:12, max:18 },
+      { label:'18–31h', min:18, max:31 },
+      { label:'31–43h', min:31, max:43 },
+      { label:'43–78h', min:43, max:78.0001 }
     ].map(zone => {
       const count = values.filter(value => value >= zone.min && value < zone.max).length;
       const pct = count * 100 / values.length;
@@ -337,7 +350,7 @@
       rows.push({
         label: MONTHS_FR[month],
         value,
-        displayValue: value.toLocaleString('fr-FR',{maximumFractionDigits:1}),
+        displayValue: formatHours(value),
         current: year === now.getFullYear() && month === now.getMonth(),
         noData: false
       });
@@ -470,7 +483,7 @@
       doc.setFont('helvetica','normal');
       doc.setFontSize(6.5);
       doc.setTextColor(71,85,105);
-      safeText(doc, v, x, py + 2);
+      safeText(doc, yMin === 0 && yMax === 78 ? `${v}h` : v, x, py + 2);
     });
 
     if (points.length < 2) {
@@ -604,7 +617,7 @@
       doc.setFont('helvetica','normal');
       doc.setFontSize(6.2);
       doc.setTextColor(71,85,105);
-      safeText(doc, v, x, py + 2);
+      safeText(doc, `${v}h`, x, py + 2);
     });
 
     if (!rows.length) {
@@ -786,8 +799,8 @@
 
       let y = 48;
       y = sectionTitle(doc, 'Synthèse générale', y);
-      drawMetricCard(doc, 14, y, 34, 'Taux actuel', fmt(rateNow), 'maximum 78');
-      drawMetricCard(doc, 51, y, 34, 'Tendance 72h', delta72 === null ? '—' : `${delta72 > 0 ? '+' : ''}${fmt(delta72)}`, delta72 === null ? 'données insuffisantes' : 'points');
+      drawMetricCard(doc, 14, y, 34, 'Niveau actuel', formatHours(rateNow), 'maximum 78h');
+      drawMetricCard(doc, 51, y, 34, 'Variation 72h', delta72 === null ? '—' : formatHours(delta72, true), delta72 === null ? 'données insuffisantes' : 'durée');
       drawMetricCard(doc, 88, y, 34, '7 jours', count7, 'événements');
       drawMetricCard(doc, 125, y, 34, '30 jours', count30, 'événements');
       drawMetricCard(doc, 162, y, 34, 'Moy. quotidienne', fmt(dailyAverage), 'sur 30 jours');
@@ -807,7 +820,7 @@
         `Sur les 30 derniers jours, ${count30} événement${count30 > 1 ? 's ont' : ' a'} été enregistré${count30 > 1 ? 's' : ''}, soit ${percentChange(count30, previous30)} par rapport aux 30 jours précédents.`,
         top30 ? `Le type le plus fréquent est « ${top30.label} » avec ${top30.count} occurrence${top30.count > 1 ? 's' : ''}.` : 'Aucun type dominant n’est identifié sur cette période.',
         `La moyenne quotidienne est de ${fmt(dailyAverage)} événement et la moyenne hebdomadaire de ${fmt(weeklyAverage)}.`,
-        rateStats30.average === null ? '' : `Le taux moyen est de ${fmt(rateStats30.average)}, avec un minimum de ${fmt(rateStats30.min)} et un maximum de ${fmt(rateStats30.max)}.`,
+        rateStats30.average === null ? '' : `Le niveau moyen est de ${formatHours(rateStats30.average)}, avec un minimum de ${formatHours(rateStats30.min)} et un maximum de ${formatHours(rateStats30.max)}.`,
         interval30 === null ? '' : `L’intervalle moyen entre deux événements est de ${interval30.toLocaleString('fr-FR',{maximumFractionDigits:1})} jour${interval30 >= 2 ? 's' : ''}.`
       ].filter(Boolean).join(' ');
       y = drawSummaryText(doc, summaryParts, y);
@@ -816,17 +829,17 @@
       y = 18;
       y = sectionTitle(doc, 'Courbes et tendances', y);
       const rate30Points = buildRatePoints(30);
-      drawLineChart(doc, 14, y, 182, 62, rate30Points, 'Évolution du taux sur les 30 derniers jours', 0, 78);
+      drawLineChart(doc, 14, y, 182, 62, rate30Points, 'Évolution du niveau sur les 30 derniers jours (heures)', 0, 78);
       y += 68;
       const ratePoints = buildRatePoints(90);
-      drawLineChart(doc, 14, y, 182, 62, ratePoints, 'Évolution du taux sur les 90 derniers jours', 0, 78);
+      drawLineChart(doc, 14, y, 182, 62, ratePoints, 'Évolution du niveau sur les 90 derniers jours (heures)', 0, 78);
       y += 68;
       y = ensureSpace(doc, y, 70);
       const currentYearRatePoints = buildCurrentYearRatePoints();
-      drawLineChart(doc, 14, y, 182, 62, currentYearRatePoints, `Évolution du taux sur l’année en cours - ${currentYear}`, 0, 78);
+      drawLineChart(doc, 14, y, 182, 62, currentYearRatePoints, `Évolution du niveau sur l’année en cours - ${currentYear} (heures)`, 0, 78);
       y += 68;
       y = ensureSpace(doc, y, 78);
-      drawMonthlyAverageRateChart(doc, 14, y, 182, 56, monthlyAverageRates, `Taux moyen mensuel - ${currentYear}`);
+      drawMonthlyAverageRateChart(doc, 14, y, 182, 56, monthlyAverageRates, `Niveau moyen mensuel - ${currentYear}`);
       y += 62;
       y = ensureSpace(doc, y, 72);
       drawMonthlyTrendChart(doc, 14, y, 182, 60, monthlyTrend, 'Fréquence mensuelle des événements - 12 derniers mois');
@@ -894,25 +907,25 @@
       doc.addPage();
       y = 18;
       y = sectionTitle(doc, `Impact et répartition par type - ${currentYear}`, y);
-      drawBarChart(doc, 14, y, 182, 68, impactYear, 'Impact cumulé par type (points retirés)');
+      drawBarChart(doc, 14, y, 182, 68, impactYear, 'Baisse cumulée par type (heures retirées)');
       y += 74;
       drawBarChart(doc, 14, y, 182, 68, percentageYear, 'Part de chaque type dans le total des événements');
       y += 74;
       doc.setFont('helvetica','normal');
       doc.setFontSize(7.5);
       doc.setTextColor(100,116,139);
-      safeText(doc, 'L’impact cumulé mesure la somme des impacts enregistrés ; la répartition indique la part de chaque type dans le nombre total d’événements.', 14, y);
+      safeText(doc, 'La baisse cumulée mesure la durée totale retirée ; la répartition indique la part de chaque type dans le nombre total d’événements.', 14, y);
 
       doc.addPage();
       y = 18;
-      y = sectionTitle(doc, 'Analyse du taux', y);
+      y = sectionTitle(doc, 'Analyse du niveau (heures)', y);
       doc.autoTable({
         startY:y,
-        head:[['Période','Taux moyen','Minimum','Maximum','Variabilité']],
+        head:[['Période','Niveau moyen','Minimum','Maximum','Variabilité']],
         body:[
-          ['7 derniers jours', rateStats7.average === null ? '—' : fmt(rateStats7.average), rateStats7.min === null ? '—' : fmt(rateStats7.min), rateStats7.max === null ? '—' : fmt(rateStats7.max), rateStats7.stddev === null ? '—' : fmt(rateStats7.stddev)],
-          ['30 derniers jours', rateStats30.average === null ? '—' : fmt(rateStats30.average), rateStats30.min === null ? '—' : fmt(rateStats30.min), rateStats30.max === null ? '—' : fmt(rateStats30.max), rateStats30.stddev === null ? '—' : fmt(rateStats30.stddev)],
-          [`Année ${currentYear}`, rateStatsYear.average === null ? '—' : fmt(rateStatsYear.average), rateStatsYear.min === null ? '—' : fmt(rateStatsYear.min), rateStatsYear.max === null ? '—' : fmt(rateStatsYear.max), rateStatsYear.stddev === null ? '—' : fmt(rateStatsYear.stddev)]
+          ['7 derniers jours', rateStats7.average === null ? '—' : formatHours(rateStats7.average), rateStats7.min === null ? '—' : formatHours(rateStats7.min), rateStats7.max === null ? '—' : formatHours(rateStats7.max), rateStats7.stddev === null ? '—' : formatHours(rateStats7.stddev)],
+          ['30 derniers jours', rateStats30.average === null ? '—' : formatHours(rateStats30.average), rateStats30.min === null ? '—' : formatHours(rateStats30.min), rateStats30.max === null ? '—' : formatHours(rateStats30.max), rateStats30.stddev === null ? '—' : formatHours(rateStats30.stddev)],
+          [`Année ${currentYear}`, rateStatsYear.average === null ? '—' : formatHours(rateStatsYear.average), rateStatsYear.min === null ? '—' : formatHours(rateStatsYear.min), rateStatsYear.max === null ? '—' : formatHours(rateStatsYear.max), rateStatsYear.stddev === null ? '—' : formatHours(rateStatsYear.stddev)]
         ],
         theme:'grid',
         styles:{ font:'helvetica', fontSize:7.5, cellPadding:2 },
@@ -924,7 +937,7 @@
       doc.setFont('helvetica','normal');
       doc.setFontSize(7.5);
       doc.setTextColor(100,116,139);
-      safeText(doc, 'Variabilité = écart-type du taux : plus la valeur est élevée, plus le taux fluctue.', 14, y);
+      safeText(doc, 'Variabilité = écart-type du niveau, exprimé en durée : plus la valeur est élevée, plus le niveau fluctue.', 14, y);
       y += 8;
       drawZoneChart(doc, 14, y, 182, 58, rateStats30.zones, 'Temps estimé dans chaque zone - 30 derniers jours');
       y += 64;
@@ -933,7 +946,7 @@
       doc.setFont('helvetica','normal');
       doc.setFontSize(7.5);
       doc.setTextColor(100,116,139);
-      safeText(doc, 'Les pourcentages de temps par zone sont estimés à partir d’échantillons réguliers du taux et des événements enregistrés.', 14, y);
+      safeText(doc, 'Les pourcentages de temps par zone sont estimés à partir d’échantillons réguliers du niveau et des événements enregistrés.', 14, y);
 
       doc.addPage();
       y = 18;
@@ -943,7 +956,7 @@
       const prevYearTypeCounts = typeCounts(previousYearEvents);
       const typeTable = TYPES.map(([kind,label]) => [
         label,
-        Number(events.find(e => e.kind === kind)?.impact || 0).toLocaleString('fr-FR'),
+        formatHours(Number(events.find(e => e.kind === kind)?.impact || 0)),
         totalTypeCounts.get(kind) || 0,
         currentTypeCounts.get(kind) || 0,
         prevYearTypeCounts.get(kind) || 0,
@@ -951,7 +964,7 @@
       ]);
       doc.autoTable({
         startY:y,
-        head:[['Type','Impact','Total',String(currentYear),String(previousYear),'30 derniers j.']],
+        head:[['Type','Baisse','Total',String(currentYear),String(previousYear),'30 derniers j.']],
         body:typeTable,
         theme:'grid',
         styles:{ font:'helvetica', fontSize:7.5, cellPadding:2 },
@@ -1004,12 +1017,12 @@
         .sort((a,b)=>new Date(a.anchor_at)-new Date(b.anchor_at))
         .map(anchor => [
           formatDate(new Date(anchor.anchor_at), true),
-          fmt(anchor.score),
+          formatHours(anchor.score),
           anchor.created_by === session?.user?.id ? 'Vous' : 'Autre compte'
         ]);
       doc.autoTable({
         startY:y,
-        head:[['Date / heure','Valeur','Saisi par']],
+        head:[['Date / heure','Valeur (heures)','Saisi par']],
         body:anchorRows.length ? anchorRows : [['—','—','Aucun ajustement enregistré']],
         theme:'grid',
         styles:{ font:'helvetica', fontSize:7.5, cellPadding:2 },
