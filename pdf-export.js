@@ -906,7 +906,7 @@
 
       doc.addPage();
       y = 18;
-      y = sectionTitle(doc, `Impact et répartition par type - ${currentYear}`, y);
+      y = sectionTitle(doc, `Baisses et répartition par type - ${currentYear}`, y);
       drawBarChart(doc, 14, y, 182, 68, impactYear, 'Baisse cumulée par type (heures retirées)');
       y += 74;
       drawBarChart(doc, 14, y, 182, 68, percentageYear, 'Part de chaque type dans le total des événements');
