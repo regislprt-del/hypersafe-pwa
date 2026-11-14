@@ -247,6 +247,55 @@
     });
   }
 
+  const RATE_ZONE_DEFS = [
+    { name:'Très bon', label:'0–12h' },
+    { name:'Bon', label:'>12–18h' },
+    { name:'Mauvais', label:'>18–31h' },
+    { name:'Très mauvais', label:'>31–43h' },
+    { name:'Catastrophique', label:'>43–78h' }
+  ];
+
+  function rateZoneIndex(value) {
+    const rate = Number(value);
+    if (rate <= 12) return 0;
+    if (rate <= 18) return 1;
+    if (rate <= 31) return 2;
+    if (rate <= 43) return 3;
+    return 4;
+  }
+
+  function zoneDurationStatistics(start, end) {
+    if (!anchors.length) return [];
+    const earliest = new Date(anchors[0].anchor_at);
+    const actualStart = start < earliest ? earliest : start;
+    if (actualStart >= end) return [];
+
+    const durationsMs = RATE_ZONE_DEFS.map(() => 0);
+    const step = 30 * 60000;
+
+    for (let t = actualStart.getTime(); t < end.getTime(); t += step) {
+      const slotEnd = Math.min(t + step, end.getTime());
+      const midpoint = new Date(t + (slotEnd - t) / 2);
+      const value = rateAt(midpoint);
+      if (value === null || !Number.isFinite(Number(value))) continue;
+      durationsMs[rateZoneIndex(value)] += slotEnd - t;
+    }
+
+    const totalMs = durationsMs.reduce((sum,value) => sum + value, 0);
+    return RATE_ZONE_DEFS.map((zone,index) => {
+      const hours = durationsMs[index] / 3600000;
+      const pct = totalMs ? durationsMs[index] * 100 / totalMs : 0;
+      return {
+        name:zone.name,
+        label:zone.label,
+        value:Math.round(pct * 10) / 10,
+        displayValue:`${pct.toLocaleString('fr-FR',{maximumFractionDigits:1})}%`,
+        hours,
+        durationDisplay:formatHours(hours)
+      };
+    });
+  }
+
   function rateStatistics(start, end, stepHours = 3) {
     if (!anchors.length) return { average:null, min:null, max:null, stddev:null, zones:[] };
     const earliest = new Date(anchors[0].anchor_at);
@@ -275,21 +324,7 @@
 
     const average = values.reduce((sum,value) => sum + value, 0) / values.length;
     const variance = values.reduce((sum,value) => sum + Math.pow(value - average, 2), 0) / values.length;
-    const zones = [
-      { label:'0–12h', min:0, max:12 },
-      { label:'12–18h', min:12, max:18 },
-      { label:'18–31h', min:18, max:31 },
-      { label:'31–43h', min:31, max:43 },
-      { label:'43–78h', min:43, max:78.0001 }
-    ].map(zone => {
-      const count = values.filter(value => value >= zone.min && value < zone.max).length;
-      const pct = count * 100 / values.length;
-      return {
-        label:zone.label,
-        value:Math.round(pct * 10) / 10,
-        displayValue:`${pct.toLocaleString('fr-FR',{maximumFractionDigits:1})}%`
-      };
-    });
+    const zones = zoneDurationStatistics(actualStart, end);
 
     return {
       average,
@@ -939,14 +974,37 @@
       doc.setTextColor(100,116,139);
       safeText(doc, 'Variabilité = écart-type du niveau, exprimé en durée : plus la valeur est élevée, plus le niveau fluctue.', 14, y);
       y += 8;
-      drawZoneChart(doc, 14, y, 182, 58, rateStats30.zones, 'Temps estimé dans chaque zone - 30 derniers jours');
+      drawZoneChart(doc, 14, y, 182, 58, rateStats30.zones, 'Répartition du temps par zone - 30 derniers jours');
       y += 64;
-      drawZoneChart(doc, 14, y, 182, 58, rateStatsYear.zones, `Temps estimé dans chaque zone - année ${currentYear}`);
+      drawZoneChart(doc, 14, y, 182, 58, rateStatsYear.zones, `Répartition du temps par zone - année ${currentYear}`);
       y += 64;
+
+      y = sectionTitle(doc, 'Heures passées dans chaque zone', ensureSpace(doc, y, 72));
+      const zoneDurationRows = RATE_ZONE_DEFS.map((zone,index) => {
+        const monthZone = rateStats30.zones[index];
+        const yearZone = rateStatsYear.zones[index];
+        return [
+          zone.name,
+          zone.label,
+          monthZone ? `${monthZone.durationDisplay} (${monthZone.displayValue})` : '—',
+          yearZone ? `${yearZone.durationDisplay} (${yearZone.displayValue})` : '—'
+        ];
+      });
+      doc.autoTable({
+        startY:y,
+        head:[['Zone','Niveau','30 derniers jours',`Année ${currentYear}`]],
+        body:zoneDurationRows,
+        theme:'grid',
+        styles:{ font:'helvetica', fontSize:7.5, cellPadding:2 },
+        headStyles:{ fillColor:[15,23,42], textColor:[255,255,255] },
+        alternateRowStyles:{ fillColor:[248,250,252] },
+        margin:{ left:14,right:14 }
+      });
+      y = doc.lastAutoTable.finalY + 7;
       doc.setFont('helvetica','normal');
       doc.setFontSize(7.5);
       doc.setTextColor(100,116,139);
-      safeText(doc, 'Les pourcentages de temps par zone sont estimés à partir d’échantillons réguliers du niveau et des événements enregistrés.', 14, y);
+      safeText(doc, 'Durées et pourcentages estimés par tranches de 30 minutes à partir du niveau enregistré. Les zones sont : Très bon, Bon, Mauvais, Très mauvais et Catastrophique.', 14, y);
 
       doc.addPage();
       y = 18;
