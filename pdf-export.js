@@ -491,8 +491,8 @@
 
     if (yMin === 0 && yMax === 78) {
       const levelBands = [
-        [0,12,[74,222,128],'Aucune douleur'],
-        [12,18,[163,230,53],'Inconfort'],
+        [0,12,[187,247,208],'Aucune douleur'],
+        [12,18,[191,219,254],'Inconfort'],
         [18,31,[250,204,21],'Douleurs'],
         [31,43,[251,146,60],'Douleurs +'],
         [43,78,[248,113,113],'Douleurs ++']
