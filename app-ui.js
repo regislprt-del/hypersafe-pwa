@@ -50,6 +50,8 @@ function renderHomeMetrics(now=new Date(),rate=currentRate(now)){
       const avgBorder=average===null?'#e2e8f0':average<=12?'#86efac':average<=18?'#93c5fd':average<=31?'#eab308':average<=43?'#f97316':'#ef4444';
       averageCard.style.background=avgColor;
       averageCard.style.borderColor=avgBorder;
+      averageCard.style.color='#0f172a';
+      averageCard.querySelectorAll('span,strong,small').forEach(el=>el.style.color='#0f172a');
     }
   }
   if(deltaEl&&deltaCard){
