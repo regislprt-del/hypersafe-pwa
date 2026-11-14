@@ -248,11 +248,11 @@
   }
 
   const RATE_ZONE_DEFS = [
-    { name:'Très bon', label:'0–12h' },
-    { name:'Bon', label:'>12–18h' },
-    { name:'Mauvais', label:'>18–31h' },
-    { name:'Très mauvais', label:'>31–43h' },
-    { name:'Catastrophique', label:'>43–78h' }
+    { name:'Aucune douleur', label:'0–12h' },
+    { name:'Inconfort', label:'>12–18h' },
+    { name:'Douleurs', label:'>18–31h' },
+    { name:'Douleurs +', label:'>31–43h' },
+    { name:'Douleurs ++', label:'>43–78h' }
   ];
 
   function rateZoneIndex(value) {
@@ -491,17 +491,21 @@
 
     if (yMin === 0 && yMax === 78) {
       const levelBands = [
-        [0,12,[74,222,128]],
-        [12,18,[163,230,53]],
-        [18,31,[250,204,21]],
-        [31,43,[251,146,60]],
-        [43,78,[248,113,113]]
+        [0,12,[74,222,128],'Aucune douleur'],
+        [12,18,[163,230,53],'Inconfort'],
+        [18,31,[250,204,21],'Douleurs'],
+        [31,43,[251,146,60],'Douleurs +'],
+        [43,78,[248,113,113],'Douleurs ++']
       ];
-      levelBands.forEach(([min,max,color]) => {
+      levelBands.forEach(([min,max,color,name]) => {
         const bandTop = valueToY(max);
         const bandBottom = valueToY(min);
         doc.setFillColor(...color);
         doc.rect(left, bandTop, right - left, bandBottom - bandTop, 'F');
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(6.2);
+        doc.setTextColor(51,65,85);
+        safeText(doc, name, right - 2, (bandTop + bandBottom) / 2 + 2, { align:'right' });
       });
     }
 
@@ -1004,7 +1008,7 @@
       doc.setFont('helvetica','normal');
       doc.setFontSize(7.5);
       doc.setTextColor(100,116,139);
-      safeText(doc, 'Durées et pourcentages estimés par tranches de 30 minutes à partir du niveau enregistré. Les zones sont : Très bon, Bon, Mauvais, Très mauvais et Catastrophique.', 14, y);
+      safeText(doc, 'Durées et pourcentages estimés par tranches de 30 minutes à partir du niveau enregistré. Les zones sont : Aucune douleur, Inconfort, Douleurs, Douleurs + et Douleurs ++.', 14, y);
 
       doc.addPage();
       y = 18;
