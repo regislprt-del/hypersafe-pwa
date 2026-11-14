@@ -18,7 +18,7 @@ async function toggleSlot(kind, slot) {
 }
 async function setAnchor() { let value=Number($('#anchorValue').value); if(!Number.isFinite(value))return; value=clamp(value); const {data,error}=await sb.from('anchors').insert({couple_id:profile.couple_id,score:value,created_by:session.user.id}).select().single(); if(error)return toast(error.message); if(data&&!anchors.some(a=>a.id===data.id)){anchors.push(data);anchors.sort((a,b)=>new Date(a.anchor_at)-new Date(b.anchor_at));} if(data?.id&&typeof window.notifyPartnerOfChange==='function')window.notifyPartnerOfChange('anchors',data.id); renderAll();toast('Nouvelle référence enregistrée'); }
 function rateTierNumber(rate){return Math.max(1,THRESHOLDS.findIndex(x=>rate<=x.max)+1)}
-function averageRateOverDays(days=7,now=new Date()){
+function averageRateOverDays(days=3,now=new Date()){
   if(!anchors.length)return null;
   const earliest=new Date(anchors[0].anchor_at);
   const requested=new Date(now.getTime()-days*86400000);
@@ -40,9 +40,18 @@ function formatElapsedSince(date,now=new Date()){
   return `il y a ${days}j`;
 }
 function renderHomeMetrics(now=new Date(),rate=currentRate(now)){
-  const average=averageRateOverDays(7,now);
+  const average=averageRateOverDays(3,now);
   const averageEl=$('#homeAverage7'),deltaEl=$('#homeAverageDelta'),deltaCard=$('#homeDeltaCard');
-  if(averageEl)averageEl.textContent=average===null?'—':fmtHours(average);
+  if(averageEl){
+    averageEl.textContent=average===null?'—':fmtHours(average);
+    const averageCard=averageEl.closest('.home-kpi');
+    if(averageCard){
+      const avgColor=average===null?'#ffffff':average<=12?'#bbf7d0':average<=18?'#bfdbfe':average<=31?'#facc15':average<=43?'#fb923c':'#f87171';
+      const avgBorder=average===null?'#e2e8f0':average<=12?'#86efac':average<=18?'#93c5fd':average<=31?'#eab308':average<=43?'#f97316':'#ef4444';
+      averageCard.style.background=avgColor;
+      averageCard.style.borderColor=avgBorder;
+    }
+  }
   if(deltaEl&&deltaCard){
     deltaCard.classList.remove('delta-up','delta-down','delta-stable');
     if(average===null){deltaEl.textContent='—';deltaCard.classList.add('delta-stable')}
