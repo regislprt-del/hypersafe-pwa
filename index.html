@@ -28,8 +28,8 @@
       <header class="topbar"><div><h1>Gestion hypersexualité</h1></div><div class="header-actions"><span id="syncBadge" class="sync-badge">Synchronisé</span><button id="logoutBtn" class="icon-btn" aria-label="Déconnexion">↪</button></div></header>
       <section class="rate-summary"><article id="rateCard" class="rate-card"><span>Niveau actuel</span><strong id="currentRate">0h</strong><small id="rateTierText" class="rate-tier-text">Palier —</small><small id="rateNextText" class="rate-next-text">—</small><small id="statusText" class="hidden"></small></article><article class="trend-card"><span>Variation (72h)</span><div class="trend-content"><strong id="trendArrow">→</strong><div class="trend-text"><b id="trendLabel">Stable</b><small id="trendValue">0h</small></div></div></article></section>
       <section class="home-kpi-grid" aria-label="Résumé rapide">
-        <article class="home-kpi"><span>Niveau moyen 7 jours</span><strong id="homeAverage7">—</strong><small id="homeAverage7Detail">sur les données disponibles</small></article>
-        <article id="homeDeltaCard" class="home-kpi"><span>Écart à la moyenne</span><strong id="homeAverageDelta">—</strong><small>niveau actuel vs moyenne 7 jours</small></article>
+        <article class="home-kpi"><span>Niveau moyen 3 jours</span><strong id="homeAverage7">—</strong><small id="homeAverage7Detail">sur les données disponibles</small></article>
+        <article id="homeDeltaCard" class="home-kpi"><span>Écart à la moyenne</span><strong id="homeAverageDelta">—</strong><small>niveau actuel vs moyenne 3 jours</small></article>
         <article class="home-kpi"><span>Dernier rapport</span><strong id="homeLastReport">—</strong><small id="homeLastReportDetail">aucun rapport enregistré</small></article>
       </section>
       <section class="card chart-card"><div class="section-head"><div><h2>Courbe d'évolution</h2><p id="reportCount7Days">0 rapport sur les 7 derniers jours</p></div><select id="historyRange"><option value="24">24 h</option><option value="72">3 jours</option><option value="168" selected>7 jours</option><option value="240">10 jours</option><option value="360">15 jours</option><option value="720">30 jours</option><option value="2160">90 jours</option><option value="all">Tout l’historique</option></select></div><div class="chart-wrap"><canvas id="curveCanvas"></canvas></div><p id="timeTo78" class="time-to-78">Temps restant avant le maximum (78h) : —</p></section>
@@ -64,6 +64,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
-  <script src="config.js?v=10"></script><script src="app-core.js?v=18"></script><script src="app-ui.js?v=20"></script><script src="event-time-edit.js?v=13"></script><script src="history-control.js?v=20"></script><script src="recent-3days.js?v=15"></script><script src="trend-background.js?v=15"></script>
+  <script src="config.js?v=10"></script><script src="app-core.js?v=18"></script><script src="app-ui.js?v=21"></script><script src="event-time-edit.js?v=13"></script><script src="history-control.js?v=20"></script><script src="recent-3days.js?v=15"></script><script src="trend-background.js?v=15"></script>
   <script src="auth-redirect.js?v=10"></script><script src="push-notifications.js?v=12"></script><script src="pdf-export.js?v=17"></script><script src="manual-adjust.js?v=13"></script><script src="reset-control.js?v=12"></script><script src="day-reset.js?v=10"></script><script src="report-count-7days.js?v=14"></script><script src="time-to-78.js?v=23"></script>
 </body></html>
