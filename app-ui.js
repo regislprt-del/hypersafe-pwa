@@ -68,9 +68,12 @@ function renderHomeMetrics(now=new Date(),rate=currentRate(now)){
   }
   if(deltaEl&&deltaCard){
     deltaCard.classList.remove('delta-up','delta-down','delta-stable');
-    if(average===null){deltaEl.textContent='—';deltaCard.classList.add('delta-stable')}
+    const dayStart=new Date(now);dayStart.setHours(0,0,0,0);
+    const avgToday=averageRateBetween(dayStart,now);
+    const avg72=averageRateBetween(new Date(now.getTime()-72*3600000),now);
+    if(avgToday===null||avg72===null){deltaEl.textContent='—';deltaCard.classList.add('delta-stable')}
     else{
-      const delta=Math.round((rate-average)*10)/10;
+      const delta=Math.round((avgToday-avg72)*10)/10;
       deltaEl.textContent=fmtHoursSigned(delta);
       deltaCard.classList.add(delta>0.05?'delta-up':delta<-0.05?'delta-down':'delta-stable');
     }
