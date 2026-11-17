@@ -18,7 +18,7 @@ async function toggleSlot(kind, slot) {
 }
 async function setAnchor() { let value=Number($('#anchorValue').value); if(!Number.isFinite(value))return; value=clamp(value); const {data,error}=await sb.from('anchors').insert({couple_id:profile.couple_id,score:value,created_by:session.user.id}).select().single(); if(error)return toast(error.message); if(data&&!anchors.some(a=>a.id===data.id)){anchors.push(data);anchors.sort((a,b)=>new Date(a.anchor_at)-new Date(b.anchor_at));} if(data?.id&&typeof window.notifyPartnerOfChange==='function')window.notifyPartnerOfChange('anchors',data.id); renderAll();toast('Nouvelle référence enregistrée'); }
 function rateTierNumber(rate){return Math.max(1,THRESHOLDS.findIndex(x=>rate<=x.max)+1)}
-function averageRateOverDays(days=3,now=new Date()){
+function averageRateOverDays(days=2,now=new Date()){
   if(!anchors.length)return null;
   const earliest=new Date(anchors[0].anchor_at);
   const requested=new Date(now.getTime()-days*86400000);
@@ -52,7 +52,7 @@ function formatElapsedSince(date,now=new Date()){
   return `il y a ${days}j`;
 }
 function renderHomeMetrics(now=new Date(),rate=currentRate(now)){
-  const average=averageRateOverDays(3,now);
+  const average=averageRateOverDays(2,now);
   const averageEl=$('#homeAverage7'),deltaEl=$('#homeAverageDelta'),deltaCard=$('#homeDeltaCard');
   if(averageEl){
     averageEl.textContent=average===null?'—':fmtHours(average);
