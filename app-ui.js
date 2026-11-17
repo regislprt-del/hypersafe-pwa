@@ -29,6 +29,18 @@ function averageRateOverDays(days=3,now=new Date()){
   const current=currentRate(now);if(Number.isFinite(current))values.push(current);
   return values.length?values.reduce((sum,value)=>sum+value,0)/values.length:null;
 }
+function averageRateBetween(start,end){
+  if(!anchors.length||!(start instanceof Date)||!(end instanceof Date)||start>=end)return null;
+  const earliest=new Date(anchors[0].anchor_at);
+  const actualStart=start<earliest?earliest:start;
+  if(actualStart>=end)return null;
+  const values=[];
+  for(let t=actualStart.getTime();t<end.getTime();t+=3600000){
+    const value=rateAt(new Date(t));
+    if(value!==null)values.push(Number(value));
+  }
+  return values.length?values.reduce((sum,value)=>sum+value,0)/values.length:null;
+}
 function formatElapsedSince(date,now=new Date()){
   if(!(date instanceof Date)||Number.isNaN(date.getTime()))return '—';
   const minutes=Math.max(0,Math.floor((now-date)/60000));
@@ -92,11 +104,15 @@ function renderRate(){
     }
   }
   renderHomeMetrics(now,r);
-  const past=new Date(now.getTime()-48*3600000),pastRate=rateAt(past),arrow=$('#trendArrow'),label=$('#trendLabel'),value=$('#trendValue');
+  const current24Start=new Date(now.getTime()-24*3600000);
+  const previous24Start=new Date(now.getTime()-48*3600000);
+  const avgCurrent24=averageRateBetween(current24Start,now);
+  const avgPrevious24=averageRateBetween(previous24Start,current24Start);
+  const arrow=$('#trendArrow'),label=$('#trendLabel'),value=$('#trendValue');
   if(!arrow||!label||!value)return;
-  if(pastRate===null){arrow.textContent='→';label.textContent='Stable';value.textContent='';value.style.display='none';return;}
+  if(avgCurrent24===null||avgPrevious24===null){arrow.textContent='→';label.textContent='Stable';value.textContent='';value.style.display='none';return;}
   value.style.display='';
-  const delta=Math.round((r-pastRate)*10)/10,abs=Math.abs(delta);
+  const delta=Math.round((avgCurrent24-avgPrevious24)*10)/10;
   if(delta>0.05){arrow.textContent='↗';label.textContent='Hausse';arrow.className='trend-up';label.className='trend-up';}
   else if(delta<-0.05){arrow.textContent='↘';label.textContent='Baisse';arrow.className='trend-down';label.className='trend-down';}
   else{arrow.textContent='→';label.textContent='Stable';arrow.className='trend-stable';label.className='trend-stable';}
