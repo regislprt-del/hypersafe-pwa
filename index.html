@@ -10,7 +10,7 @@
   <link rel="icon" href="icons/icon-192.png?v=10" type="image/png" />
   <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=10" />
   <link rel="manifest" href="manifest.webmanifest?v=10" />
-  <link rel="stylesheet" href="styles.css?v=21" />
+  <link rel="stylesheet" href="styles.css?v=22" />
   <title>Gestion Hypersexualité</title>
 </head>
 <body>
@@ -26,7 +26,7 @@
     <section id="pairView" class="auth-card hidden"><img src="icons/icon-192.png?v=10" class="auth-logo" alt="Logo HyperSafe" /><h2>Relier les deux comptes</h2><p class="muted">Une personne crée le couple, l'autre saisit le code obtenu.</p><div class="pair-grid"><div class="panel"><h3>Créer le couple</h3><button id="createCouple" class="primary">Créer et obtenir le code</button><div id="createdCode" class="share-code hidden"></div></div><div class="panel"><h3>Rejoindre</h3><input id="joinCode" maxlength="12" placeholder="Code du couple" /><button id="joinCouple" class="secondary">Rejoindre</button></div></div><button id="logoutPair" class="ghost">Se déconnecter</button></section>
     <section id="appView" class="hidden">
       <header class="topbar"><div></div><div class="header-actions"><span id="syncBadge" class="sync-badge">Synchronisé</span></div></header>
-      <section class="rate-summary"><article id="rateCard" class="rate-card"><span>Niveau actuel</span><strong id="currentRate">0h</strong><small id="rateTierText" class="rate-tier-text">Palier —</small><small id="rateNextText" class="rate-next-text">—</small><small id="statusText" class="hidden"></small></article><article class="trend-card"><span>Tendance 24h vs 24h</span><div class="trend-content"><strong id="trendArrow">→</strong><div class="trend-text"><b id="trendLabel">Stable</b><small id="trendValue">0h</small></div></div></article></section>
+      <section class="rate-summary"><article id="rateCard" class="rate-card"><span>Niveau actuel</span><strong id="currentRate">0h</strong><small id="rateTierText" class="rate-tier-text">Palier —</small><small id="rateNextText" class="rate-next-text">—</small><small id="statusText" class="hidden"></small></article><article class="trend-card"><span>TENDANCE</span><div class="trend-content"><strong id="trendArrow">→</strong><div class="trend-text"><b id="trendLabel">Stable</b><small id="trendValue">0h</small></div></div></article></section>
       <section class="home-kpi-grid" aria-label="Résumé rapide">
         <article class="home-kpi"><span>Niveau moyen 3 jours</span><strong id="homeAverage7">—</strong><small id="homeAverage7Detail">sur les données disponibles</small></article>
         <article id="homeDeltaCard" class="home-kpi"><span>Écart à la moyenne</span><strong id="homeAverageDelta">—</strong><small>moyenne du jour vs moyenne 48h</small></article>
