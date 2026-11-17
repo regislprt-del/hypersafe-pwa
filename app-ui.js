@@ -92,7 +92,7 @@ function renderRate(){
     }
   }
   renderHomeMetrics(now,r);
-  const past=new Date(now.getTime()-72*3600000),pastRate=rateAt(past),arrow=$('#trendArrow'),label=$('#trendLabel'),value=$('#trendValue');
+  const past=new Date(now.getTime()-48*3600000),pastRate=rateAt(past),arrow=$('#trendArrow'),label=$('#trendLabel'),value=$('#trendValue');
   if(!arrow||!label||!value)return;
   if(pastRate===null){arrow.textContent='→';label.textContent='Stable';value.textContent='';value.style.display='none';return;}
   value.style.display='';
