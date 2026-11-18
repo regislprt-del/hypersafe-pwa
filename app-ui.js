@@ -86,26 +86,7 @@ function renderHomeMetrics(now=new Date(),rate=currentRate(now)){
     deltaCard.style.color='#0f172a';
     deltaCard.querySelectorAll('span,strong,small').forEach(el=>el.style.color='#0f172a');
   }
-  const validEvents=events.filter(e=>new Date(e.occurred_at)<=now).sort((a,b)=>new Date(b.occurred_at)-new Date(a.occurred_at));
-  const latest=validEvents[0],lastEl=$('#homeLastReport'),lastDetail=$('#homeLastReportDetail');
-  if(lastEl)lastEl.textContent=latest?formatElapsedSince(new Date(latest.occurred_at),now):'—';
-  if(lastDetail)lastDetail.textContent=latest?new Date(latest.occurred_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'aucun rapport enregistré';
-  if(lastEl){
-    const lastCard=lastEl.closest('.home-kpi');
-    if(lastCard){
-      let bg='#ffffff',border='#e2e8f0';
-      if(latest){
-        const elapsedHours=Math.max(0,(now-new Date(latest.occurred_at))/3600000);
-        if(elapsedHours<8){bg='#4ade80';border='#22c55e';}
-        else if(elapsedHours<=13){bg='#fb923c';border='#f97316';}
-        else{bg='#f87171';border='#ef4444';}
-      }
-      lastCard.style.background=bg;
-      lastCard.style.borderColor=border;
-      lastCard.style.color='#0f172a';
-      lastCard.querySelectorAll('span,strong,small').forEach(el=>el.style.color='#0f172a');
-    }
-  }
+
 }
 function renderAll(){renderRate();renderSlots();renderRecent();renderHistory();renderChart();$('#coupleCode').textContent=couple?.join_code||'—';$('#anchorValue').value=Math.round(currentRate()*10)/10;$('#todayLabel').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'});}
 function renderRate(){
