@@ -93,7 +93,7 @@ function renderRate(){
   const now=new Date(),r=currentRate(now),s=status(r),tier=rateTierNumber(r);
   $('#currentRate').textContent=fmtHours(r);
   const rateCard=$('#rateCard');
-  const rateColor=r<=12?'#4ade80':r<=18?'#a3e635':r<=31?'#facc15':r<=43?'#fb923c':'#f87171';
+  const rateColor=r<=12?'#bbf7d0':r<=18?'#bfdbfe':r<=31?'#facc15':r<=43?'#fb923c':'#f87171';
   rateCard.style.background=rateColor;rateCard.style.borderColor=rateColor;rateCard.style.color='#0f172a';
   const tierText=$('#rateTierText'),nextText=$('#rateNextText');
   if(tierText)tierText.textContent=`Palier ${tier} • ${s.label}`;
