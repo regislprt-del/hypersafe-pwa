@@ -248,8 +248,7 @@
   }
 
   const RATE_ZONE_DEFS = [
-    { name:'Aucune douleur', label:'0–12h' },
-    { name:'Inconfort', label:'>12–18h' },
+    { name:'Aucune douleur', label:'0–18h' },
     { name:'Douleurs', label:'>18–31h' },
     { name:'Douleurs +', label:'>31–43h' },
     { name:'Douleurs ++', label:'>43–78h' }
@@ -257,11 +256,10 @@
 
   function rateZoneIndex(value) {
     const rate = Number(value);
-    if (rate <= 12) return 0;
-    if (rate <= 18) return 1;
-    if (rate <= 31) return 2;
-    if (rate <= 43) return 3;
-    return 4;
+    if (rate <= 18) return 0;
+    if (rate <= 31) return 1;
+    if (rate <= 43) return 2;
+    return 3;
   }
 
   function zoneDurationStatistics(start, end) {
@@ -491,8 +489,7 @@
 
     if (yMin === 0 && yMax === 78) {
       const levelBands = [
-        [0,12,[187,247,208],'Aucune douleur'],
-        [12,18,[191,219,254],'Inconfort'],
+        [0,18,[187,247,208],'Aucune douleur'],
         [18,31,[250,204,21],'Douleurs'],
         [31,43,[251,146,60],'Douleurs +'],
         [43,78,[248,113,113],'Douleurs ++']
@@ -513,7 +510,7 @@
     doc.setLineWidth(0.25);
 
     const ticks = yMin === 0 && yMax === 78
-      ? [0,12,18,31,43,78]
+      ? [0,18,31,43,78]
       : [yMin, Math.round((yMax-yMin)*.25+yMin), Math.round((yMax-yMin)*.5+yMin), Math.round((yMax-yMin)*.75+yMin), yMax];
 
     ticks.forEach(v => {
@@ -628,9 +625,8 @@
       return [203,213,225];
     }
     const v = Number(value);
-    if (v < 12) return [74,222,128];
-    if (v < 18) return [163,230,53];
-    if (v < 31) return [250,204,21];
+    if (v <= 18) return [187,247,208];
+    if (v <= 31) return [250,204,21];
     if (v < 43) return [251,146,60];
     return [248,113,113];
   }
@@ -650,7 +646,7 @@
 
     doc.setDrawColor(226,232,240);
     doc.setLineWidth(0.25);
-    [0,12,18,31,43,78].forEach(v => {
+    [0,18,31,43,78].forEach(v => {
       const py = valueToY(v);
       doc.line(left, py, right, py);
       doc.setFont('helvetica','normal');
@@ -1008,7 +1004,7 @@
       doc.setFont('helvetica','normal');
       doc.setFontSize(7.5);
       doc.setTextColor(100,116,139);
-      safeText(doc, 'Durées et pourcentages estimés par tranches de 30 minutes à partir du niveau enregistré. Les zones sont : Aucune douleur, Inconfort, Douleurs, Douleurs + et Douleurs ++.', 14, y);
+      safeText(doc, 'Durées et pourcentages estimés par tranches de 30 minutes à partir du niveau enregistré. Les zones sont : Aucune douleur, Douleurs, Douleurs + et Douleurs ++.', 14, y);
 
       doc.addPage();
       y = 18;
