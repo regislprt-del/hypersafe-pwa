@@ -16,12 +16,9 @@
     let border = '#cbd5e1';
 
     if (Number.isFinite(rate)) {
-      if (rate <= 12) {
+      if (rate <= 18) {
         background = '#bbf7d0';
         border = '#86efac';
-      } else if (rate <= 18) {
-        background = '#bfdbfe';
-        border = '#93c5fd';
       } else if (rate <= 31) {
         background = '#facc15';
         border = '#eab308';
