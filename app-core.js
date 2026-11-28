@@ -4,8 +4,9 @@ const TYPES = [
   ['scenario', 'Soirée scénario'], ['anal', 'Rapport anal'], ['fell', 'Fellation'], ['scenario_anal', 'Soirée scénario avec anal']
 ];
 const THRESHOLDS = [
-  { max: 12, label: 'Aucune douleur', c: '#bbf7d0' }, { max: 18, label: 'Inconfort', c: '#bfdbfe' },
-  { max: 31, label: 'Douleurs', c: '#facc15' }, { max: 43, label: 'Douleurs +', c: '#fb923c' },
+  { max: 18, label: 'Aucune douleur', c: '#bbf7d0' },
+  { max: 31, label: 'Douleurs', c: '#facc15' },
+  { max: 43, label: 'Douleurs +', c: '#fb923c' },
   { max: 78, label: 'Douleurs ++', c: '#f87171' }
 ];
 let sb, authMode='login', session=null, profile=null, couple=null, anchors=[], events=[], historyLimit=200, realtimeChannel=null;
